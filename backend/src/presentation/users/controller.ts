@@ -1,124 +1,239 @@
-import { Request, Response, text } from 'express';
-
-const users = [
-  {
-    id: 1,
-    nombre: 'Juan',
-    rol: 'Administrador',
-    email: 'juan@ejemplo.com',
-    password: 'qwerty',
-  },
-  {
-    id: 2,
-    nombre: 'María',
-    rol: 'Usuario',
-    email: 'maria@ejemplo.com',
-    password: 'abc123',
-  },
-  {
-    id: 3,
-    nombre: 'Carlos',
-    rol: 'Proveedor',
-    email: 'carlos@ejemplo.com',
-    password: 'passw0rd',
-  },
-];
+import { Request, Response } from 'express';
+import { prisma } from '../../data/posgres';
 
 export class UserController {
   constructor() {}
 
-  public getUsers = (req: Request, res: Response) => {
-    return res.json(users);
+  public getUsers = async (req: Request, res: Response) => {
+    try {
+      const users = await prisma.usuario.findMany({
+        where: {
+          activo: true,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          rol: true,
+          email: true,
+        },
+      });
+      return res.json(users);
+    } catch (e) {
+      return res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
   };
 
-  public getUserByID = (req: Request, res: Response) => {
+  public getUserByID = async (req: Request, res: Response) => {
     const id = +req.params.id;
     if (isNaN(id))
       return res.status(400).json({ error: 'ID argument is not a number.' });
 
-    const user = users.find((user) => user.id === id);
+    try {
+      const user = await prisma.usuario.findUnique({
+        where: {
+          id_usuario: id,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          rol: true,
+          email: true,
+          activo: true,
+        },
+      });
 
-    user
-      ? res.json(user)
-      : res.status(404).json({ error: `Use with id ${id} not found` });
+      user
+        ? res.json(user)
+        : res.status(404).json({ error: `User with id ${id} not found` });
+    } catch (e) {
+      return res.status(500).json({ error: 'Error al obtener usuario' });
+    }
   };
 
-  public createUser = (req: Request, res: Response) => {
+  public createUser = async (req: Request, res: Response) => {
     const { nombre, rol, email, password } = req.body;
 
     const errors: { [key: string]: string } = {};
 
+    //Validación de nombre
     if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {
       errors.nombre = 'El campo "nombre" es obligatorio.';
     }
 
+    // Validación de rol (Presencia y formato)
+    const allowedRoles = ['ADMINISTRADOR', 'CAJERO', 'INVENTARIO'];
     if (!rol || typeof rol !== 'string' || rol.trim() === '') {
       errors.rol = 'El campo "rol" es obligatorio.';
+    } else if (!allowedRoles.includes(rol.trim().toUpperCase())) {
+      errors.rol = `El campo "rol" debe ser uno de: ${allowedRoles.join(', ')}.`;
     }
 
+    //Validación de email
     if (!email || typeof email !== 'string' || email.trim() === '') {
       errors.email = 'El campo "email" es obligatorio.';
     } else {
-      // validación de formato de email
       const emailRegex = /^\S+@\S+\.\S+$/;
       if (!emailRegex.test(email)) {
         errors.email = 'El campo "email" debe ser un correo válido.';
+      } else {
+        // Verificación de disponibilidad en la base de datos integrada
+        const existingUser = await prisma.usuario.findUnique({
+          where: { email: email.trim().toLowerCase() },
+        });
+        if (existingUser) {
+          errors.email = 'El email ya está registrado.';
+        }
       }
     }
 
+    //Validación de password
     if (!password || typeof password !== 'string' || password.trim() === '') {
       errors.password = 'El campo "password" es obligatorio.';
     } else if (password.length < 6) {
       errors.password = 'El campo "password" debe tener al menos 6 caracteres.';
     }
 
+    // Si hay cualquier error acumulado, respondemos de inmediato
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({ errors });
     }
 
-    const newUser = {
-      id: users.length + 1,
-      nombre: nombre,
-      rol: rol,
-      email: email,
-      password: password,
-    };
+    const normalizedRol = rol.trim().toUpperCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    users.push(newUser);
+    try {
+      const user = await prisma.usuario.create({
+        data: {
+          nombre: nombre.trim(),
+          rol: normalizedRol,
+          email: normalizedEmail,
+          password: password,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          rol: true,
+          email: true,
+          activo: true,
+        },
+      });
 
-    res.json(newUser);
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al crear usuario en el servidor.' });
+    }
   };
 
-  public updateUser = (req: Request, res: Response) => {
+  public updateUser = async (req: Request, res: Response) => {
     const id = +req.params.id;
     if (isNaN(id))
       return res.status(400).json({ error: 'ID argument is not a number.' });
 
-    const user = users.find((user) => user.id === id);
-    if (!user)
-      return res.status(404).json({ error: `User with ID ${id} not found` });
+    try {
+      const user = await prisma.usuario.findUnique({
+        where: { id_usuario: id },
+      });
 
-    const { nombre, rol, email, password } = req.body;
+      if (!user)
+        return res.status(404).json({ error: `User with ID ${id} not found` });
 
-    user.nombre = nombre || user.nombre;
-    user.rol = rol || user.rol;
-    user.email = email || user.email;
-    user.password = password || user.password;
+      const { nombre, rol, email, password } = req.body;
 
-    res.json(user);
+      if (email !== undefined) {
+        const normalizedEmail =
+          typeof email === 'string' ? email.trim().toLowerCase() : email;
+
+        const existingUser = await prisma.usuario.findFirst({
+          where: {
+            email: normalizedEmail,
+            NOT: {
+              id_usuario: id,
+            },
+          },
+        });
+
+        if (existingUser) {
+          return res
+            .status(400)
+            .json({ error: 'El email ya está registrado por otro usuario' });
+        }
+
+        req.body.email = normalizedEmail;
+      }
+
+      if (rol !== undefined) {
+        const allowedRoles = ['ADMINISTRADOR', 'CAJERO', 'INVENTARIO'];
+        if (
+          typeof rol !== 'string' ||
+          !allowedRoles.includes(rol.trim().toUpperCase())
+        ) {
+          return res.status(400).json({
+            errors: {
+              rol: `El campo "rol" debe ser uno de: ${allowedRoles.join(', ')}.`,
+            },
+          });
+        }
+      }
+
+      const normalizedRol =
+        typeof rol === 'string' ? rol.trim().toUpperCase() : rol;
+
+      const updatedUser = await prisma.usuario.update({
+        where: {
+          id_usuario: id,
+        },
+        data: {
+          nombre: nombre,
+          rol: normalizedRol,
+          email: email,
+          password: password,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          rol: true,
+          email: true,
+        },
+      });
+
+      res.json(updatedUser);
+    } catch (e) {
+      res.status(500).json({ error: 'Error al actualizar usuario' });
+    }
   };
 
-  public deleteUser = (req: Request, res: Response) => {
+  public deleteUser = async (req: Request, res: Response) => {
     const id = +req.params.id;
 
     if (isNaN(id))
       return res.status(400).json({ error: 'ID argument is not a number.' });
 
-    const deletedUser = users.find((user) => user.id === id);
-    if (!deletedUser)
-      return res.status(404).json({ error: `User with id ${id} not found` });
+    try {
+      const userExists = await prisma.usuario.findUnique({
+        where: { id_usuario: id },
+      });
 
-    users.splice(users.indexOf(deletedUser), 1);
-    return res.json(deletedUser);
+      if (!userExists) {
+        return res.status(404).json({ error: `User with ID ${id} not found` });
+      }
+
+      const deletedUser = await prisma.usuario.update({
+        where: {
+          id_usuario: id,
+        },
+        data: {
+          activo: false,
+        },
+        select: {
+          id_usuario: true,
+          nombre: true,
+          rol: true,
+          email: true,
+        },
+      });
+      return res.json(deletedUser);
+    } catch (e) {
+      return res.status(500).json({ error: 'Error al eliminar usuario' });
+    }
   };
 }

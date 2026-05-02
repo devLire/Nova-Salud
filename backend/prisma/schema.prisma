@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Definición de roles permitidos
+enum RolUsuario {
+  ADMINISTRADOR
+  CAJERO
+  INVENTARIO
+}
+
+model Categoria {
+  id_categoria Int        @id @default(autoincrement())
+  nombre       String     @db.VarChar(100)
+  descripcion  String?    @db.Text
+  activo       Boolean    @default(true)
+
+  // Relación
+  productos    Producto[]
+}
+
+model Proveedor {
+  id_proveedor   Int        @id @default(autoincrement())
+  nombre_empresa String     @db.VarChar(150)
+  contacto       String?    @db.VarChar(100)
+  telefono       String?    @db.VarChar(20)
+  activo         Boolean    @default(true)
+
+  // Relación
+  productos      Producto[]
+}
+
+model Usuario {
+  id_usuario Int        @id @default(autoincrement())
+  nombre     String     @db.VarChar(100)
+  rol        RolUsuario @default(CAJERO)
+  email      String?    @unique @db.VarChar(100)
+  password   String     @db.VarChar(255)
+  activo     Boolean    @default(true)
+
+  // Relaciones
+  ventas     Venta[]
+  ingresos   Ingreso_inventario[]
+}
+
+model Producto {
+  id_producto   Int     @id @default(autoincrement())
+  id_categoria  Int?
+  id_proveedor  Int?
+  codigo_barras String? @db.VarChar(50)
+  nombre        String  @db.VarChar(150)
+  descripcion   String? @db.Text
+  precio_venta  Decimal @db.Decimal(10, 2)
+  stock_actual  Int     @default(0)
+  stock_minimo  Int     @default(0)
+  activo        Boolean @default(true)
+
+  // Llaves foráneas
+  categoria Categoria? @relation(fields: [id_categoria], references: [id_categoria])
+  proveedor Proveedor? @relation(fields: [id_proveedor], references: [id_proveedor])
+
+  // Relaciones inversas
+  detallesVenta Detalle_Venta_Producto[]
+  ingresos      Ingreso_inventario[]
+}
+
+model Venta {
+  id_venta    Int      @id @default(autoincrement())
+  id_usuario  Int?
+  fecha_hora  DateTime @default(now())
+  total       Decimal  @db.Decimal(10, 2)
+  metodo_pago String?  @db.VarChar(50)
+
+  // Llave foránea
+  usuario  Usuario?                 @relation(fields: [id_usuario], references: [id_usuario])
+
+  // Relación inversa
+  detalles Detalle_Venta_Producto[]
+}
+
+model Detalle_Venta_Producto {
+  id_detalle_venta_producto Int     @id @default(autoincrement())
+  id_venta                  Int?
+  id_producto               Int?
+  cantidad                  Int
+  precio_unitario           Decimal @db.Decimal(10, 2)
+  subtotal                  Decimal @db.Decimal(10, 2)
+
+  // Llaves foráneas
+  venta    Venta?    @relation(fields: [id_venta], references: [id_venta])
+  producto Producto? @relation(fields: [id_producto], references: [id_producto])
+}
+
+model Ingreso_inventario {
+  id_inventario      Int      @id @default(autoincrement())
+  id_producto        Int?
+  id_usuario         Int?
+  cantidad_ingresada Int
+  fecha_ingreso      DateTime @default(now())
+
+  // Llaves foráneas
+  producto Producto? @relation(fields: [id_producto], references: [id_producto])
+  usuario  Usuario?  @relation(fields: [id_usuario], references: [id_usuario])
+}
