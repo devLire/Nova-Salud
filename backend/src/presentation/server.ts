@@ -21,6 +21,10 @@ export class Server {
 
   async start() {
     //* Middlewares
+    // parse application/json
+    this.app.use(express.json());
+    // parse application/x-www-form-urlencoded
+    this.app.use(express.urlencoded({ extended: true }));
 
     //* Routes
     this.app.use(this.routes);
