@@ -17,3 +17,8 @@ export * from './productos/create-producto.dto';
 export * from './productos/update-producto.dto';
 export * from './productos/get-productos.dto';
 export * from './productos/get-producto-by-id.dto';
+
+export * from './ventas/create-venta.dto';
+export * from './ventas/update-venta.dto';
+export * from './ventas/get-ventas.dto';
+export * from './ventas/get-venta-by-id.dto';
