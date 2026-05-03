@@ -1,20 +1,49 @@
 export class UpdateProveedorDto {
   private constructor(
     public readonly id: number,
-    public readonly values: { [key: string]: any }
+    public readonly nombre_empresa?: string,
+    public readonly contacto?: string,
+    public readonly telefono?: string
   ) {}
 
-  static create(object: { [key: string]: any }): [any?, UpdateProveedorDto?] {
-    const { id, ...rest } = object;
+  get values() {
+    const returnObj: { [key: string]: any } = {};
 
-    if (!id || isNaN(id) || id <= 0) {
-      return [['ID inválido']];
+    if (this.nombre_empresa) returnObj.nombre_empresa = this.nombre_empresa;
+    if (this.contacto !== undefined) returnObj.contacto = this.contacto;
+    if (this.telefono !== undefined) returnObj.telefono = this.telefono;
+
+    return returnObj;
+  }
+
+  static create(object: {
+    [key: string]: any;
+  }): [{ [key: string]: string }?, UpdateProveedorDto?] {
+    const { id, nombre_empresa, contacto, telefono } = object;
+    const normalizedTelefono = telefono.toString();
+
+    const numericId = Number(id);
+
+    if (isNaN(numericId) || numericId <= 0) {
+      return [{ id: 'El ID debe ser un número válido' }, undefined];
     }
 
-    if (Object.keys(rest).length === 0) {
-      return [['No hay datos para actualizar']];
+    if (
+      !nombre_empresa &&
+      contacto === undefined &&
+      normalizedTelefono === undefined
+    ) {
+      return [{ data: 'No hay datos para actualizar' }, undefined];
     }
 
-    return [undefined, new UpdateProveedorDto(id, rest)];
+    return [
+      undefined,
+      new UpdateProveedorDto(
+        numericId,
+        nombre_empresa?.trim(),
+        contacto?.trim(),
+        normalizedTelefono?.trim()
+      ),
+    ];
   }
 }

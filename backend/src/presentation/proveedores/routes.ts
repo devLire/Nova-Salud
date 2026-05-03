@@ -1,10 +1,16 @@
 import { Router } from 'express';
 import { ProveedorController } from './controller';
+import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { RoleMiddleware } from '../../middlewares/role.middleware';
 
-export class ProveedorRoutes {
+export class ProveedoresRoutes {
   static get routes(): Router {
     const router = Router();
     const controller = new ProveedorController();
+
+    // Middlewares globales
+    router.use(AuthMiddleware.validateJWT);
+    router.use(RoleMiddleware.requireAdmin);
 
     router.get('/', controller.getProveedores);
     router.get('/:id', controller.getProveedorByID);

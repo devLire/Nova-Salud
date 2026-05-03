@@ -1,20 +1,37 @@
 export class UpdateCategoriaDto {
   private constructor(
     public readonly id: number,
-    public readonly values: { [key: string]: any }
+    public readonly nombre?: string,
+    public readonly descripcion?: string
   ) {}
 
-  static create(object: { [key: string]: any }): [any?, UpdateCategoriaDto?] {
-    const { id, ...rest } = object;
+  get values() {
+    const returnObj: { [key: string]: any } = {};
 
-    if (!id || isNaN(id) || id <= 0) {
-      return [['ID inválido']];
+    if (this.nombre) returnObj.nombre = this.nombre;
+    if (this.descripcion !== undefined)
+      returnObj.descripcion = this.descripcion;
+
+    return returnObj;
+  }
+
+  static create(object: {
+    [key: string]: any;
+  }): [{ [key: string]: string }?, UpdateCategoriaDto?] {
+    const { id, nombre, descripcion } = object;
+    const numericId = Number(id);
+
+    if (isNaN(numericId) || numericId <= 0) {
+      return [{ id: 'El ID debe ser un número válido' }, undefined];
     }
 
-    if (Object.keys(rest).length === 0) {
-      return [['No hay datos para actualizar']];
+    if (!nombre && descripcion === undefined) {
+      return [{ data: 'No hay datos para actualizar' }, undefined];
     }
 
-    return [undefined, new UpdateCategoriaDto(id, rest)];
+    return [
+      undefined,
+      new UpdateCategoriaDto(numericId, nombre?.trim(), descripcion?.trim()),
+    ];
   }
 }

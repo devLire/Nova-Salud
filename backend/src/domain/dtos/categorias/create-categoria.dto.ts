@@ -4,19 +4,20 @@ export class CreateCategoriaDto {
     public readonly descripcion?: string
   ) {}
 
-  static create(object: { [key: string]: any }): [any?, CreateCategoriaDto?] {
+  static create(object: { [key: string]: any }): [
+    { [key: string]: string }?,
+    CreateCategoriaDto?,
+  ] {
     const { nombre, descripcion } = object;
 
-    const errors: any = {};
+    const errors: { [key: string]: string } = {};
 
     if (!nombre || nombre.trim() === '') {
-      errors.nombre = 'El nombre es obligatorio';
+      errors.nombre = 'El campo "nombre" es obligatorio.';
     }
 
-    if (Object.keys(errors).length > 0) {
-      return [errors];
-    }
+    if (Object.keys(errors).length > 0) return [errors, undefined];
 
-    return [undefined, new CreateCategoriaDto(nombre, descripcion)];
+    return [undefined, new CreateCategoriaDto(nombre.trim(), descripcion?.trim())];
   }
 }

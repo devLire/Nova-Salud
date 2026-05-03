@@ -4,13 +4,14 @@ export class GetProveedoresDto {
     public readonly limit: number
   ) {}
 
-  static create(page: number, limit: number): [string[]?, GetProveedoresDto?] {
-    const errors: string[] = [];
-
-    if (page <= 0) errors.push('Page debe ser mayor a 0');
-    if (limit <= 0) errors.push('Limit debe ser mayor a 0');
-
-    if (errors.length > 0) return [errors];
+  static create(
+    page: number = 1,
+    limit: number = 10
+  ): [{ [key: string]: string }?, GetProveedoresDto?] {
+    if (isNaN(page) || isNaN(limit))
+      return [{ pagination: 'Página y límite deben ser números' }, undefined];
+    if (page <= 0) return [{ pagination: 'La página debe ser mayor a 0' }, undefined];
+    if (limit <= 0) return [{ pagination: 'El límite debe ser mayor a 0' }, undefined];
 
     return [undefined, new GetProveedoresDto(page, limit)];
   }

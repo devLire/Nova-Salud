@@ -32,6 +32,10 @@ export class UpdateUserDto {
     if (!id || Number(isNaN(id)))
       return [{ id: 'El ID debe ser un número válido' }, undefined];
 
+    if (!nombre && !email && !rol && !password) {
+      return [{ data: 'No hay datos para actualizar' }, undefined];
+    }
+
     if (email !== undefined) {
       if (!regularExps.email.test(email)) {
         errors.email = 'El email no es válido.';

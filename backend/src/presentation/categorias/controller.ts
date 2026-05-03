@@ -1,208 +1,272 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../data/posgres';
 import {
-    GetCategoriasDto,
-    GetCategoriaByIdDto,
-    CreateCategoriaDto,
-    UpdateCategoriaDto
+  GetCategoriasDto,
+  GetCategoriaByIdDto,
+  CreateCategoriaDto,
+  UpdateCategoriaDto,
+  GetUserByIdDto,
 } from '../../domain/dtos';
 
 export class CategoriasController {
+  public getCategorias = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [errors, getCategoriasDto] = GetCategoriasDto.create(+page, +limit);
 
-    public getCategorias = async (req: Request, res: Response) => {
-        const { page = 1, limit = 10 } = req.query;
-        const [errors, dto] = GetCategoriasDto.create(+page, +limit);
+    if (errors)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Los datos proporcionados no son válidos.',
+        errors,
+      });
 
-        if (errors)
-            return res.status(400).json({
-                status: 'fail',
-                message: 'Datos inválidos',
-                errors,
-            });
+    try {
+      const [categorias, total] = await Promise.all([
+        prisma.categoria.findMany({
+          where: { activo: true },
+          skip: (getCategoriasDto!.page - 1) * getCategoriasDto!.limit,
+          take: getCategoriasDto!.limit,
+          select: {
+            id_categoria: true,
+            nombre: true,
+            descripcion: true,
+          },
+        }),
+        prisma.categoria.count({ where: { activo: true } }),
+      ]);
 
-        try {
-            const [categorias, total] = await Promise.all([
-                prisma.categoria.findMany({
-                    where: { activo: true },
-                    skip: (dto!.page - 1) * dto!.limit,
-                    take: dto!.limit,
-                }),
-                prisma.categoria.count({ where: { activo: true } })
-            ]);
+      const hasNext = getCategoriasDto!.page * getCategoriasDto!.limit < total;
 
-            return res.json({
-                status: 'success',
-                message: 'Categorías obtenidas',
-                data: categorias,
-                pagination: {
-                    page: dto!.page,
-                    limit: dto!.limit,
-                    total,
-                },
-                errors: null
-            });
+      return res.json({
+        status: 'success',
+        message: 'Categorías obtenidas correctamente',
+        data: categorias,
+        pagination: {
+          page: getCategoriasDto!.page,
+          limit: getCategoriasDto!.limit,
+          total,
+          next: hasNext
+            ? `/api/categorias?page=${getCategoriasDto!.page + 1}&limit=${getCategoriasDto!.limit}`
+            : null,
+          prev:
+            getCategoriasDto!.page > 1
+              ? `/api/categorias?page=${getCategoriasDto!.page - 1}&limit=${getCategoriasDto!.limit}`
+              : null,
+        },
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al obtener categorías',
+        errors: null,
+      });
+    }
+  };
 
-        } catch (e) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Error al obtener categorías',
-                errors: null
-            });
-        }
-    };
+  public getCategoriaByID = async (req: Request, res: Response) => {
+    const id = +req.params.id;
+    const [errors, getCategoriaByIdDto] = GetCategoriaByIdDto.create(id);
 
-    public getCategoriaByID = async (req: Request, res: Response) => {
-        const id = +req.params.id;
-        const [errors, dto] = GetCategoriaByIdDto.create(id);
+    if (errors)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Los datos proporcionados no son válidos.',
+        errors,
+      });
 
-        if (errors)
-            return res.status(400).json({
-                status: 'fail',
-                message: 'ID inválido',
-                errors,
-            });
+    try {
+      const categoria = await prisma.categoria.findUnique({
+        where: { id_categoria: getCategoriaByIdDto!.id },
+        select: {
+          id_categoria: true,
+          nombre: true,
+          descripcion: true,
+        },
+      });
 
-        try {
-            const categoria = await prisma.categoria.findUnique({
-                where: { id_categoria: dto!.id }
-            });
+      if (!categoria) {
+        return res.status(404).json({
+          status: 'fail',
+          message: `Categoria with ID ${id} not found`,
+          errors: null,
+        });
+      }
 
-            if (!categoria) {
-                return res.status(404).json({
-                    status: 'fail',
-                    message: `Categoría con ID ${id} no existe`,
-                    errors: null
-                });
-            }
+      return res.json({
+        status: 'success',
+        message: 'Categoría obtenida correctamente',
+        data: categoria,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al obtener categoría',
+        errors: null,
+      });
+    }
+  };
 
-            return res.json({
-                status: 'success',
-                message: 'Categoría obtenida',
-                data: categoria,
-                errors: null
-            });
+  public createCategoria = async (req: Request, res: Response) => {
+    const [errors, createCategoriaDto] = CreateCategoriaDto.create(req.body);
 
-        } catch (e) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Error del servidor',
-                errors: null
-            });
-        }
-    };
+    if (errors)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Los datos proporcionados no son válidos.',
+        errors,
+      });
 
-    public createCategoria = async (req: Request, res: Response) => {
-        const [errors, dto] = CreateCategoriaDto.create(req.body);
+    try {
+      const existingCategory = await prisma.categoria.findFirst({
+        where: {
+          nombre: createCategoriaDto!.nombre,
+        },
+      });
 
-        if (errors)
-            return res.status(400).json({
-                status: 'fail',
-                message: 'Datos inválidos',
-                errors
-            });
+      if (existingCategory)
+        return res.status(400).json({
+          status: 'fail',
+          message: 'El nombre de la categoría ya existe',
+          errors: null,
+        });
 
-        try {
-            const categoria = await prisma.categoria.create({
-                data: {
-                    nombre: dto!.nombre,
-                    descripcion: dto!.descripcion,
-                    activo: true
-                }
-            });
+      const categoria = await prisma.categoria.create({
+        data: {
+          nombre: createCategoriaDto!.nombre,
+          descripcion: createCategoriaDto!.descripcion,
+          activo: true,
+        },
+        select: {
+          id_categoria: true,
+          nombre: true,
+          descripcion: true,
+        },
+      });
 
-            return res.status(201).json({
-                status: 'success',
-                message: 'Categoría creada',
-                data: categoria,
-                errors: null
-            });
+      return res.status(201).json({
+        status: 'success',
+        message: 'Categoría creada correctamente',
+        data: categoria,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al crear categoría en el servidor',
+        errors: null,
+      });
+    }
+  };
 
-        } catch (e) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Error al crear categoría',
-                errors: null
-            });
-        }
-    };
+  public updateCategoria = async (req: Request, res: Response) => {
+    const id = +req.params.id;
+    const [errors, updateCategoriaDto] = UpdateCategoriaDto.create({
+      ...req.body,
+      id,
+    });
 
-    public updateCategoria = async (req: Request, res: Response) => {
-        const id = +req.params.id;
-        const [errors, dto] = UpdateCategoriaDto.create({ ...req.body, id });
+    if (errors)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Los datos proporcionados no son válidos.',
+        errors,
+      });
 
-        if (errors)
-            return res.status(400).json({
-                status: 'fail',
-                message: 'Datos inválidos',
-                errors
-            });
+    try {
+      const exists = await prisma.categoria.findUnique({
+        where: { id_categoria: id },
+      });
 
-        try {
-            const exists = await prisma.categoria.findUnique({
-                where: { id_categoria: id }
-            });
+      if (!exists)
+        return res.status(404).json({
+          status: 'fail',
+          message: `Categoria with ID ${id} not found`,
+          errors: null,
+        });
 
-            if (!exists)
-                return res.status(404).json({
-                    status: 'fail',
-                    message: `Categoría con ID ${id} no existe`,
-                    errors: null
-                });
+      if (updateCategoriaDto?.nombre) {
+        const existingCategory = await prisma.categoria.findFirst({
+          where: {
+            nombre: updateCategoriaDto!.nombre,
+            NOT: {
+              id_categoria: updateCategoriaDto!.id,
+            },
+          },
+        });
 
-            const categoria = await prisma.categoria.update({
-                where: { id_categoria: id },
-                data: dto!.values
-            });
+        if (existingCategory)
+          return res.status(400).json({
+            status: 'fail',
+            message: 'El nombre de la categoría ya existe',
+            errors: null,
+          });
+      }
 
-            return res.json({
-                status: 'success',
-                message: 'Categoría actualizada',
-                data: categoria,
-                errors: null
-            });
+      const categoria = await prisma.categoria.update({
+        where: { id_categoria: id },
+        data: updateCategoriaDto!.values,
+        select: {
+          id_categoria: true,
+          nombre: true,
+          descripcion: true,
+        },
+      });
 
-        } catch (e) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Error al actualizar categoría',
-                errors: null
-            });
-        }
-    };
+      return res.json({
+        status: 'success',
+        message: 'Categoría actualizada correctamente',
+        data: categoria,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al actualizar categoría',
+        errors: null,
+      });
+    }
+  };
 
-    public deleteCategoria = async (req: Request, res: Response) => {
-        const id = +req.params.id;
+  public deleteCategoria = async (req: Request, res: Response) => {
+    const id = +req.params.id;
+    const [errors, getCategoriaByIdDto] = GetCategoriaByIdDto.create(id);
+    if (errors)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Los datos proporcionados no son válidos.',
+        errors,
+      });
+    try {
+      const exists = await prisma.categoria.findUnique({
+        where: { id_categoria: getCategoriaByIdDto!.id },
+      });
 
-        try {
-            const exists = await prisma.categoria.findUnique({
-                where: { id_categoria: id }
-            });
+      if (!exists)
+        return res.status(404).json({
+          status: 'fail',
+          message: `Categoria with ID ${getCategoriaByIdDto!.id} not found`,
+          errors: null,
+        });
 
-            if (!exists)
-                return res.status(404).json({
-                    status: 'fail',
-                    message: `Categoría con ID ${id} no existe`,
-                    errors: null
-                });
+      const categoria = await prisma.categoria.update({
+        where: { id_categoria: getCategoriaByIdDto!.id },
+        data: { activo: false },
+        select: {
+          id_categoria: true,
+          nombre: true,
+          descripcion: true,
+        },
+      });
 
-            const categoria = await prisma.categoria.update({
-                where: { id_categoria: id },
-                data: { activo: false }
-            });
-
-            return res.json({
-                status: 'success',
-                message: 'Categoría eliminada',
-                data: categoria,
-                errors: null
-            });
-
-        } catch (e) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Error al eliminar categoría',
-                errors: null
-            });
-        }
-    };
+      return res.json({
+        status: 'success',
+        message: 'Categoría eliminada correctamente',
+        data: categoria,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al eliminar categoría',
+        errors: null,
+      });
+    }
+  };
 }
