@@ -6,16 +6,18 @@ export class UpdateUserDto {
     public readonly nombre?: string,
     public readonly email?: string,
     public readonly rol?: string,
-    public readonly password?: string
+    public readonly password?: string,
+    public readonly activo?: boolean
   ) {}
 
   get values() {
     const returnObj: { [key: string]: any } = {};
 
-    if (this.nombre) returnObj.nombre = this.nombre;
-    if (this.email) returnObj.email = this.email;
-    if (this.rol) returnObj.rol = this.rol;
-    if (this.password) returnObj.password = this.password;
+    if (this.nombre !== undefined) returnObj.nombre = this.nombre;
+    if (this.email !== undefined) returnObj.email = this.email;
+    if (this.rol !== undefined) returnObj.rol = this.rol;
+    if (this.password !== undefined) returnObj.password = this.password;
+    if (this.activo !== undefined) returnObj.activo = this.activo;
 
     return returnObj;
   }
@@ -26,13 +28,13 @@ export class UpdateUserDto {
     }?,
     UpdateUserDto?,
   ] {
-    const { id, nombre, email, rol, password } = props;
+    const { id, nombre, email, rol, password, activo } = props;
     const errors: { [key: string]: string } = {};
 
     if (!id || Number(isNaN(id)))
       return [{ id: 'El ID debe ser un número válido' }, undefined];
 
-    if (!nombre && !email && !rol && !password) {
+    if (!nombre && !email && !rol && !password && activo === undefined) {
       return [{ data: 'No hay datos para actualizar' }, undefined];
     }
 
@@ -64,7 +66,8 @@ export class UpdateUserDto {
         nombre?.trim(),
         email?.toLowerCase().trim(),
         rol?.toUpperCase().trim(),
-        password
+        password,
+        activo !== undefined ? Boolean(activo) : undefined
       ),
     ];
   }

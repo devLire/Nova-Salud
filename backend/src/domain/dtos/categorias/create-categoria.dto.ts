@@ -4,10 +4,9 @@ export class CreateCategoriaDto {
     public readonly descripcion?: string
   ) {}
 
-  static create(object: { [key: string]: any }): [
-    { [key: string]: string }?,
-    CreateCategoriaDto?,
-  ] {
+  static create(object: {
+    [key: string]: any;
+  }): [{ [key: string]: string }?, CreateCategoriaDto?] {
     const { nombre, descripcion } = object;
 
     const errors: { [key: string]: string } = {};
@@ -18,6 +17,9 @@ export class CreateCategoriaDto {
 
     if (Object.keys(errors).length > 0) return [errors, undefined];
 
-    return [undefined, new CreateCategoriaDto(nombre.trim(), descripcion?.trim())];
+    return [
+      undefined,
+      new CreateCategoriaDto(nombre.trim(), descripcion?.trim()),
+    ];
   }
 }

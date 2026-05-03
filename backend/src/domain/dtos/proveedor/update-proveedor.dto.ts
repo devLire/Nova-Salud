@@ -3,15 +3,17 @@ export class UpdateProveedorDto {
     public readonly id: number,
     public readonly nombre_empresa?: string,
     public readonly contacto?: string,
-    public readonly telefono?: string
+    public readonly telefono?: string,
+    public readonly activo?: boolean
   ) {}
 
   get values() {
     const returnObj: { [key: string]: any } = {};
 
-    if (this.nombre_empresa) returnObj.nombre_empresa = this.nombre_empresa;
+    if (this.nombre_empresa !== undefined) returnObj.nombre_empresa = this.nombre_empresa;
     if (this.contacto !== undefined) returnObj.contacto = this.contacto;
     if (this.telefono !== undefined) returnObj.telefono = this.telefono;
+    if (this.activo !== undefined) returnObj.activo = this.activo;
 
     return returnObj;
   }
@@ -19,8 +21,8 @@ export class UpdateProveedorDto {
   static create(object: {
     [key: string]: any;
   }): [{ [key: string]: string }?, UpdateProveedorDto?] {
-    const { id, nombre_empresa, contacto, telefono } = object;
-    const normalizedTelefono = telefono.toString();
+    const { id, nombre_empresa, contacto, telefono, activo } = object;
+    const normalizedTelefono = telefono?.toString();
 
     const numericId = Number(id);
 
@@ -31,7 +33,8 @@ export class UpdateProveedorDto {
     if (
       !nombre_empresa &&
       contacto === undefined &&
-      normalizedTelefono === undefined
+      normalizedTelefono === undefined &&
+      activo === undefined
     ) {
       return [{ data: 'No hay datos para actualizar' }, undefined];
     }
@@ -42,7 +45,8 @@ export class UpdateProveedorDto {
         numericId,
         nombre_empresa?.trim(),
         contacto?.trim(),
-        normalizedTelefono?.trim()
+        normalizedTelefono?.trim(),
+        activo !== undefined ? Boolean(activo) : undefined
       ),
     ];
   }

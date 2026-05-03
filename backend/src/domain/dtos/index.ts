@@ -12,3 +12,8 @@ export * from './categorias/create-categoria.dto';
 export * from './categorias/update-categoria.dto';
 export * from './categorias/get-categorias.dto';
 export * from './categorias/get-categoria-by-id.dto';
+
+export * from './productos/create-producto.dto';
+export * from './productos/update-producto.dto';
+export * from './productos/get-productos.dto';
+export * from './productos/get-producto-by-id.dto';
