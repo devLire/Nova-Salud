@@ -2,3 +2,13 @@ export * from './users/create-user.dto';
 export * from './users/update-user.dto';
 export * from './users/get-users.dto';
 export * from './users/get-user-by-id.dto';
+
+export * from './proveedor/create-proveedor.dto';
+export * from './proveedor/update-proveedor.dto';
+export * from './proveedor/get-proveedores.dto';
+export * from './proveedor/get-proveedor-by-id.dto';
+
+export * from './categorias/create-categoria.dto';
+export * from './categorias/update-categoria.dto';
+export * from './categorias/get-categorias.dto';
+export * from './categorias/get-categoria-by-id.dto';
