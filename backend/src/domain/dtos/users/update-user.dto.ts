@@ -1,3 +1,5 @@
+import { regularExps } from '../../../config/regular-exp';
+
 export class UpdateUserDto {
   private constructor(
     public readonly id: number,
@@ -31,8 +33,7 @@ export class UpdateUserDto {
       return [{ id: 'El ID debe ser un número válido' }, undefined];
 
     if (email !== undefined) {
-      const emailRegex = /^\S+@\S+\.\S+$/;
-      if (!emailRegex.test(email)) {
+      if (!regularExps.email.test(email)) {
         errors.email = 'El email no es válido.';
       }
     }

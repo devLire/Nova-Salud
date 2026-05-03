@@ -1,3 +1,5 @@
+import { regularExps } from '../../../config/regular-exp';
+
 export class CreateUserDto {
   private constructor(
     public readonly nombre: string,
@@ -22,8 +24,8 @@ export class CreateUserDto {
     if (!email) {
       errors.email = 'El campo "email" es obligatorio.';
     } else {
-      const emailRegex = /^\S+@\S+\.\S+$/;
-      if (!emailRegex.test(email)) errors.email = 'El email no es válido.';
+      if (!regularExps.email.test(email))
+        errors.email = 'El email no es válido.';
     }
 
     const allowedRoles = ['ADMINISTRADOR', 'CAJERO', 'INVENTARIO'];
