@@ -12,6 +12,7 @@ export class ProductosRoutes {
     router.use(AuthMiddleware.validateJWT);
     router.use(RoleMiddleware.requireAdmin);
 
+    router.get('/alertas', controller.getAlertasStock);
     router.get('/', controller.getProductos);
     router.get('/:id', controller.getProductoByID);
     router.post('/', controller.createProducto);
@@ -21,4 +22,3 @@ export class ProductosRoutes {
     return router;
   }
 }
-

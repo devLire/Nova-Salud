@@ -371,4 +371,38 @@ export class ProductosController {
       });
     }
   };
+
+  public getAlertasStock = async (req: Request, res: Response) => {
+    try {
+      const productos = await prisma.producto.findMany({
+        where: { activo: true },
+        include: {
+          proveedor: {
+            select: { nombre_empresa: true, telefono: true },
+          },
+          categoria: {
+            select: { nombre: true },
+          },
+        },
+      });
+
+      const productosEnAlerta = productos
+        .filter((p) => p.stock_actual <= p.stock_minimo)
+        .sort((a, b) => a.stock_actual - b.stock_actual);
+
+      return res.json({
+        status: 'success',
+        message: 'Reporte de alertas de stock generado correctamente',
+        data: productosEnAlerta,
+        count: productosEnAlerta.length,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al generar el reporte de alertas',
+        errors: null,
+        e: e,
+      });
+    }
+  };
 }

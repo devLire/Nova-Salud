@@ -22,3 +22,7 @@ export * from './ventas/create-venta.dto';
 export * from './ventas/update-venta.dto';
 export * from './ventas/get-ventas.dto';
 export * from './ventas/get-venta-by-id.dto';
+
+export * from './ingresos/create-ingreso.dto';
+export * from './ingresos/get-ingreso-by-id.dto';
+export * from './ingresos/get-ingresos.dto';
