@@ -1,4 +1,5 @@
 import express, { Router } from 'express';
+import cors from 'cors';
 
 interface Options {
   port: number;
@@ -21,6 +22,14 @@ export class Server {
 
   async start() {
     //* Middlewares
+    this.app.use(
+      cors({
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+      })
+    );
+
     // parse application/json
     this.app.use(express.json());
     // parse application/x-www-form-urlencoded
