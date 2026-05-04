@@ -1,24 +1,32 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/stores/auth/useAuthStore'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [rol, setRol] = useState('Administrador')
   const [error, setError] = useState('')
+  const [isPosting, setIsPosting] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuthStore()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
       setError('Completa todos los campos')
       return
     }
-    // Por ahora guarda un token demo. Cuando conectes el backend,
-    // reemplaza esto por la llamada a POST /api/auth/login
-    localStorage.setItem('token', 'demo-token')
-    localStorage.setItem('rol', rol)
-    navigate('/dashboard')
+
+    setIsPosting(true)
+    const isValid = await login(email, password)
+
+    if (isValid) {
+      navigate('/dashboard')
+      return
+    }
+
+    setError('Correo y/o contraseña no válidos')
+    setIsPosting(false)
   }
 
   return (
@@ -82,24 +90,12 @@ export default function Login() {
               style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }}
             />
           </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Rol</label>
-            <select
-              value={rol}
-              onChange={e => setRol(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', appearance: 'none', background: 'white' }}
-            >
-              <option>Administrador</option>
-              <option>Cajero</option>
-            </select>
-          </div>
-
           <button
             type="submit"
-            style={{ width: '100%', padding: 12, background: '#0f4c35', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+            disabled={isPosting}
+            style={{ width: '100%', padding: 12, background: isPosting ? '#6b7280' : '#0f4c35', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: isPosting ? 'not-allowed' : 'pointer' }}
           >
-            Iniciar sesión
+            {isPosting ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
         </form>
       </div>

@@ -1,43 +1,45 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import POS from './pages/POS'
-import Productos from './pages/Productos'
-import Ingresos from './pages/Ingresos'
-import Proveedores from './pages/Proveedores'
-import Categorias from './pages/Categorias'
-import Reportes from './pages/Reportes'
-import Layout from './components/Layout'
-import PrivateRoute from './components/PrivateRoute'
+import type { PropsWithChildren } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { appRouter } from './app.router';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useAuthStore } from './stores/auth/useAuthStore';
+
+const queryClient = new QueryClient();
+
+const CheckAuthProvider = ({ children }: PropsWithChildren) => {
+  const { checkAuthStatus } = useAuthStore();
+
+  const { isLoading } = useQuery({
+    queryKey: ['auth'],
+    queryFn: checkAuthStatus,
+    retry: false,
+    refetchInterval: 1000 * 60 * 60 * 1.5, // Hora y media,
+    refetchOnWindowFocus: true,
+  });
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <span>Cargando aplicación...</span>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <QueryClientProvider client={queryClient}>
+      {/* Custom provider */}
+      <CheckAuthProvider>
+        <RouterProvider router={appRouter} />
+      </CheckAuthProvider>
 
-        {/* Ruta pública */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Rutas privadas — todas dentro del Layout */}
-        <Route element={<PrivateRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pos" element={<POS />} />
-            <Route path="/productos" element={<Productos />} />
-            <Route path="/inventario/ingresos" element={<Ingresos />} />
-            <Route path="/proveedores" element={<Proveedores />} />
-            <Route path="/categorias" element={<Categorias />} />
-            <Route path="/reportes" element={<Reportes />} />
-          </Route>
-        </Route>
-
-        {/* Cualquier ruta desconocida → login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-
-      </Routes>
-    </BrowserRouter>
-  )
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }
 
-export default App
+export default App;

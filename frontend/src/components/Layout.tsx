@@ -1,4 +1,5 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
+import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 const navItems = [
   { path: '/dashboard',           label: 'Dashboard' },
@@ -11,12 +12,7 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    navigate('/login')
-  }
+  const { logout } = useAuthStore();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -35,7 +31,7 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <button onClick={handleLogout}
+        <button onClick={logout}
           style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'rgba(255,255,255,0.7)', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 14, textAlign: 'left' }}>
           Cerrar sesión
         </button>
