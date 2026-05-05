@@ -5,7 +5,6 @@ import {
   GetCategoriaByIdDto,
   CreateCategoriaDto,
   UpdateCategoriaDto,
-  GetUserByIdDto,
 } from '../../domain/dtos';
 
 export class CategoriasController {
