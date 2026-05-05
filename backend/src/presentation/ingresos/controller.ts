@@ -30,13 +30,19 @@ export class IngresosController {
             cantidad_ingresada: true,
             fecha_ingreso: true,
             producto: {
-              select: { id_producto: true, nombre: true },
+              select: {
+                id_producto: true,
+                nombre: true,
+                proveedor: {
+                  select: { nombre_empresa: true },
+                },
+              },
             },
             usuario: {
               select: { id_usuario: true, nombre: true },
             },
           },
-          orderBy: { fecha_ingreso: 'desc' }
+          orderBy: { fecha_ingreso: 'desc' },
         }),
         prisma.ingreso_inventario.count(),
       ]);
@@ -130,7 +136,7 @@ export class IngresosController {
       const result = await prisma.$transaction(async (tx) => {
         // 1. Verificar que el producto exista
         const producto = await tx.producto.findUnique({
-          where: { id_producto: createIngresoDto!.id_producto }
+          where: { id_producto: createIngresoDto!.id_producto },
         });
 
         if (!producto || !producto.activo) {
@@ -145,7 +151,9 @@ export class IngresosController {
           });
 
           if (!usuarioExists || !usuarioExists.activo) {
-            throw new Error('El usuario seleccionado no es válido o está inactivo.');
+            throw new Error(
+              'El usuario seleccionado no es válido o está inactivo.'
+            );
           }
         }
 
@@ -163,21 +171,24 @@ export class IngresosController {
             cantidad_ingresada: true,
             fecha_ingreso: true,
             producto: {
-               select: { nombre: true, stock_actual: true }
+              select: { nombre: true, stock_actual: true },
             },
             usuario: {
-               select: { nombre: true }
-            }
-          }
+              select: { nombre: true },
+            },
+          },
         });
 
         // 3. ACTUALIZAR EL STOCK (Aumentar)
         await tx.producto.update({
           where: { id_producto: createIngresoDto!.id_producto },
-          data: { stock_actual: { increment: createIngresoDto!.cantidad_ingresada } }
+          data: {
+            stock_actual: { increment: createIngresoDto!.cantidad_ingresada },
+          },
         });
 
-        nuevoIngreso.producto!.stock_actual += createIngresoDto!.cantidad_ingresada;
+        nuevoIngreso.producto!.stock_actual +=
+          createIngresoDto!.cantidad_ingresada;
 
         return nuevoIngreso;
       });
@@ -185,11 +196,15 @@ export class IngresosController {
       return res.status(201).json({
         status: 'success',
         message: 'Stock actualizado correctamente',
-        data: result
+        data: result,
       });
     } catch (e: any) {
-      return res.status(400).json({ status: 'fail', message: e.message || 'Error al procesar el ingreso.' });
+      return res
+        .status(400)
+        .json({
+          status: 'fail',
+          message: e.message || 'Error al procesar el ingreso.',
+        });
     }
   };
 }
-
