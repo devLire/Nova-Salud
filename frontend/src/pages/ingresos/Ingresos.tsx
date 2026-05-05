@@ -1,25 +1,28 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import IngresoItem from './components/IngresoItem'
+import { getIngresos, createIngreso } from '@/actions/ingresos.action.ts'
+import { getProductos } from '@/actions/productos.action.ts'
+import { getProveedores } from '@/actions/proveedores.action.ts'
 
-interface IngresoForm { producto_id: string; cantidad: string; proveedor_id: string; fecha: string }
-
-const productosDemo = [
-  { id: '1', nombre: 'Paracetamol 500mg' },
-  { id: '2', nombre: 'Amoxicilina 500mg' },
-  { id: '3', nombre: 'Ibuprofeno 400mg' },
-]
-
-const proveedoresDemo = [
-  { id: '1', nombre: 'Farma Perú SAC' },
-  { id: '2', nombre: 'MedDistrib EIRL' },
-]
-
-const historialDemo = [
-  { id: 1, producto: 'Paracetamol 500mg', cantidad: 100, proveedor: 'Farma Perú SAC', fecha: '2025-04-28', usuario: 'Admin' },
-  { id: 2, producto: 'Amoxicilina 500mg', cantidad: 50, proveedor: 'MedDistrib EIRL', fecha: '2025-04-27', usuario: 'Admin' },
-]
+export interface IngresoForm { producto_id: string; cantidad: string; proveedor_id: string; fecha: string }
 
 export default function Ingresos() {
+  const queryClient = useQueryClient()
   const [form, setForm] = useState<IngresoForm>({ producto_id: '', cantidad: '', proveedor_id: '', fecha: new Date().toISOString().split('T')[0] })
+
+  const { data: historial = [] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
+  const { data: productos = [] } = useQuery({ queryKey: ['productos'], queryFn: getProductos })
+  const { data: proveedores = [] } = useQuery({ queryKey: ['proveedores'], queryFn: getProveedores })
+
+  const { mutate: addIngreso } = useMutation({
+    mutationFn: createIngreso,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ingresos'] })
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      setForm({ producto_id: '', cantidad: '', proveedor_id: '', fecha: new Date().toISOString().split('T')[0] })
+    }
+  })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -28,9 +31,7 @@ export default function Ingresos() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.producto_id || !form.cantidad || !form.proveedor_id) return alert('Completa todos los campos')
-    // Aquí irá POST /api/inventario/ingresos
-    alert(`Ingreso registrado: ${form.cantidad} unidades de producto #${form.producto_id}`)
-    setForm({ producto_id: '', cantidad: '', proveedor_id: '', fecha: new Date().toISOString().split('T')[0] })
+    addIngreso(form)
   }
 
   return (
@@ -46,7 +47,7 @@ export default function Ingresos() {
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Producto</label>
             <select name="producto_id" value={form.producto_id} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
               <option value="">Selecciona un producto</option>
-              {productosDemo.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {productos?.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
           <div>
@@ -57,7 +58,7 @@ export default function Ingresos() {
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Proveedor</label>
             <select name="proveedor_id" value={form.proveedor_id} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
               <option value="">Selecciona un proveedor</option>
-              {proveedoresDemo.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {proveedores?.map((p: any) => <option key={p.id} value={p.id}>{p.nombre_empresa}</option>)}
             </select>
           </div>
           <div>
@@ -82,14 +83,8 @@ export default function Ingresos() {
             </tr>
           </thead>
           <tbody>
-            {historialDemo.map((h, i) => (
-              <tr key={h.id} style={{ borderBottom: i < historialDemo.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                <td style={{ padding: '14px 16px', fontWeight: 500 }}>{h.producto}</td>
-                <td style={{ padding: '14px 16px', color: '#16a34a', fontWeight: 600 }}>+{h.cantidad}</td>
-                <td style={{ padding: '14px 16px' }}>{h.proveedor}</td>
-                <td style={{ padding: '14px 16px', color: '#888' }}>{h.fecha}</td>
-                <td style={{ padding: '14px 16px', color: '#888' }}>{h.usuario}</td>
-              </tr>
+            {historial?.map((h: any, i: number) => (
+              <IngresoItem key={h.id} ingreso={h} isLast={i === historial.length - 1} />
             ))}
           </tbody>
         </table>

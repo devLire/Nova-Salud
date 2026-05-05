@@ -1,24 +1,35 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import CategoriaItem from './components/CategoriaItem'
+import { getCategorias, createCategoria } from '../../actions/categorias.action'
 
-interface Categoria { id: number; nombre: string; descripcion: string }
-
-const categoriasDemo: Categoria[] = [
-  { id: 1, nombre: 'Analgésicos', descripcion: 'Medicamentos para el dolor' },
-  { id: 2, nombre: 'Antibióticos', descripcion: 'Medicamentos antimicrobianos' },
-  { id: 3, nombre: 'Cuidado personal', descripcion: 'Productos de higiene y cuidado' },
-]
+export interface Categoria { id: number; nombre: string; descripcion: string }
 
 export default function Categorias() {
-  const [categorias, setCategorias] = useState(categoriasDemo)
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({ nombre: '', descripcion: '' })
   const [mostrarForm, setMostrarForm] = useState(false)
 
+  const { data: categorias = [], isLoading } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: getCategorias,
+  })
+
+  const { mutate: create } = useMutation({
+    mutationFn: createCategoria,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categorias'] })
+      setMostrarForm(false)
+      setForm({ nombre: '', descripcion: '' })
+    }
+  })
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setCategorias(prev => [...prev, { id: Date.now(), ...form }])
-    setForm({ nombre: '', descripcion: '' })
-    setMostrarForm(false)
+    create(form)
   }
+
+  if (isLoading) return <p>Cargando categorías...</p>
 
   return (
     <div>
@@ -56,15 +67,12 @@ export default function Categorias() {
             </tr>
           </thead>
           <tbody>
-            {categorias.map((c, i) => (
-              <tr key={c.id} style={{ borderBottom: i < categorias.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                <td style={{ padding: '14px 16px', fontWeight: 500 }}>{c.nombre}</td>
-                <td style={{ padding: '14px 16px', color: '#888' }}>{c.descripcion}</td>
-                <td style={{ padding: '14px 16px' }}>
-                  <button style={{ marginRight: 8, padding: '6px 12px', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white', fontSize: 12 }}>Editar</button>
-                  <button onClick={() => setCategorias(prev => prev.filter(x => x.id !== c.id))} style={{ padding: '6px 12px', border: '1px solid #fecaca', borderRadius: 6, cursor: 'pointer', background: '#fef2f2', color: '#dc2626', fontSize: 12 }}>Eliminar</button>
-                </td>
-              </tr>
+            {categorias.map((c: any, i: number) => (
+              <CategoriaItem
+                key={c.id_categoria}
+                categoria={c}
+                isLast={i === categorias.length - 1}
+              />
             ))}
           </tbody>
         </table>

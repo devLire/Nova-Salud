@@ -1,5 +1,5 @@
 import { api } from '@/api/api.ts';
-import type {AuthResponse} from "@/infrastructure/interfaces/auth.response.ts";
+import type {AuthResponse} from "../infrastructure/interfaces/responses/auth.response.ts";
 
 export const loginAction = async (
   email: string,

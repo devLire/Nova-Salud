@@ -1,3 +1,6 @@
+import MetricaCard from './components/MetricaCard'
+import AlertaRow from './components/AlertaRow'
+
 // Datos de ejemplo — reemplaza con llamadas reales a tu API
 const alertas = [
   { id: 1, nombre: 'Paracetamol 500mg', stock_actual: 3, stock_minimo: 10, proveedor: 'Farma Perú SAC' },
@@ -21,10 +24,7 @@ export default function Dashboard() {
       {/* Métricas rápidas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
         {metricas.map(m => (
-          <div key={m.label} style={{ background: '#f8f8f6', borderRadius: 10, padding: '20px 24px' }}>
-            <p style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>{m.label}</p>
-            <p style={{ fontSize: 24, fontWeight: 600 }}>{m.valor}</p>
-          </div>
+          <MetricaCard key={m.label} label={m.label} valor={m.valor} />
         ))}
       </div>
 
@@ -49,15 +49,7 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {alertas.map((a, i) => (
-                <tr key={a.id} style={{ borderBottom: i < alertas.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: 500 }}>{a.nombre}</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center', color: '#dc2626', fontWeight: 700 }}>{a.stock_actual}</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center', color: '#888' }}>{a.stock_minimo}</td>
-                  <td style={{ padding: '14px 16px', color: '#555' }}>{a.proveedor}</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <span style={{ background: '#fef2f2', color: '#dc2626', borderRadius: 20, padding: '4px 12px', fontSize: 12 }}>Reponer</span>
-                  </td>
-                </tr>
+                <AlertaRow key={a.id} alerta={a} isLast={i === alertas.length - 1} />
               ))}
             </tbody>
           </table>

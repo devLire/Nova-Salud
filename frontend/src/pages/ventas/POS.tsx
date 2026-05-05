@@ -1,7 +1,8 @@
 import { useState } from 'react'
-
-interface Producto { id: number; nombre: string; precio_venta: number; codigo_barras: string }
-interface ItemCarrito extends Producto { cantidad: number }
+import type { Producto } from './components/PosProductItem'
+import PosProductItem from './components/PosProductItem'
+import PosCartItem from './components/PosCartItem'
+import type {ItemCarrito} from './components/PosCartItem'
 
 const productosDemo: Producto[] = [
   { id: 1, nombre: 'Paracetamol 500mg', precio_venta: 0.5, codigo_barras: '001' },
@@ -64,19 +65,7 @@ export default function POS() {
         />
         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {productosFiltrados.map(p => (
-            <div
-              key={p.id}
-              onClick={() => agregarAlCarrito(p)}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', border: '1px solid #e5e7eb', borderRadius: 10, cursor: 'pointer', transition: 'background 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'white')}
-            >
-              <div>
-                <p style={{ fontWeight: 500, marginBottom: 2 }}>{p.nombre}</p>
-                <p style={{ fontSize: 12, color: '#888' }}>Código: {p.codigo_barras}</p>
-              </div>
-              <span style={{ fontWeight: 600, color: '#0f4c35', fontSize: 16 }}>S/ {p.precio_venta.toFixed(2)}</span>
-            </div>
+            <PosProductItem key={p.id} producto={p} onAgregar={agregarAlCarrito} />
           ))}
         </div>
       </div>
@@ -92,19 +81,12 @@ export default function POS() {
             <p style={{ color: '#aaa', textAlign: 'center', marginTop: 40 }}>Agrega productos al carrito</p>
           ) : (
             carrito.map(item => (
-              <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 500 }}>{item.nombre}</p>
-                  <p style={{ color: '#888', fontSize: 12 }}>S/ {item.precio_venta.toFixed(2)} c/u</p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => cambiarCantidad(item.id, -1)} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white' }}>-</button>
-                  <span style={{ fontWeight: 600, minWidth: 20, textAlign: 'center' }}>{item.cantidad}</span>
-                  <button onClick={() => cambiarCantidad(item.id, 1)} style={{ width: 26, height: 26, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white' }}>+</button>
-                  <span style={{ minWidth: 60, textAlign: 'right', fontWeight: 600 }}>S/ {(item.precio_venta * item.cantidad).toFixed(2)}</span>
-                  <button onClick={() => eliminarItem(item.id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
-                </div>
-              </div>
+              <PosCartItem
+                key={item.id}
+                item={item}
+                onCambiarCantidad={cambiarCantidad}
+                onEliminar={eliminarItem}
+              />
             ))
           )}
         </div>

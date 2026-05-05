@@ -1,24 +1,33 @@
 import { useState } from 'react'
-
-interface Proveedor { id: number; nombre_empresa: string; contacto: string; telefono: string }
-
-const proveedoresDemo: Proveedor[] = [
-  { id: 1, nombre_empresa: 'Farma Perú SAC', contacto: 'Juan Pérez', telefono: '987654321' },
-  { id: 2, nombre_empresa: 'MedDistrib EIRL', contacto: 'Ana García', telefono: '976543210' },
-]
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import ProveedorItem from './components/ProveedorItem'
+import { getProveedores, createProveedor } from '@/actions/proveedores.action.ts'
 
 export default function Proveedores() {
-  const [proveedores, setProveedores] = useState(proveedoresDemo)
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({ nombre_empresa: '', contacto: '', telefono: '' })
   const [mostrarForm, setMostrarForm] = useState(false)
 
+  const { data: proveedores = [], isLoading } = useQuery({
+    queryKey: ['proveedores'],
+    queryFn: getProveedores,
+  })
+
+  const { mutate: create } = useMutation({
+    mutationFn: createProveedor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proveedores'] })
+      setMostrarForm(false)
+      setForm({ nombre_empresa: '', contacto: '', telefono: '' })
+    }
+  })
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const nuevo = { id: Date.now(), ...form }
-    setProveedores(prev => [...prev, nuevo])
-    setForm({ nombre_empresa: '', contacto: '', telefono: '' })
-    setMostrarForm(false)
+    create(form)
   }
+
+  if (isLoading) return <p>Cargando proveedores...</p>
 
   return (
     <div>
@@ -57,16 +66,12 @@ export default function Proveedores() {
             </tr>
           </thead>
           <tbody>
-            {proveedores.map((p, i) => (
-              <tr key={p.id} style={{ borderBottom: i < proveedores.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                <td style={{ padding: '14px 16px', fontWeight: 500 }}>{p.nombre_empresa}</td>
-                <td style={{ padding: '14px 16px' }}>{p.contacto}</td>
-                <td style={{ padding: '14px 16px', color: '#888' }}>{p.telefono}</td>
-                <td style={{ padding: '14px 16px' }}>
-                  <button style={{ marginRight: 8, padding: '6px 12px', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white', fontSize: 12 }}>Editar</button>
-                  <button onClick={() => setProveedores(prev => prev.filter(x => x.id !== p.id))} style={{ padding: '6px 12px', border: '1px solid #fecaca', borderRadius: 6, cursor: 'pointer', background: '#fef2f2', color: '#dc2626', fontSize: 12 }}>Eliminar</button>
-                </td>
-              </tr>
+            {proveedores.map((p: any, i: number) => (
+              <ProveedorItem
+                key={p.id_proveedor}
+                proveedor={p}
+                isLast={i === proveedores.length - 1}
+              />
             ))}
           </tbody>
         </table>

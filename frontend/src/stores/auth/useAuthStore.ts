@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import type {User} from '@/infrastructure/interfaces/user.interface';
+import type {UserResponse} from '../../infrastructure/interfaces/responses/user.response';
 
 import {loginAction} from "@/actions/login.action.ts";
 import {checkAuthAction} from "@/actions/check-auth.action.ts";
@@ -8,7 +8,7 @@ type AuthStatus = 'authenticated' | 'not-authenticated' | 'checking';
 
 type AuthState = {
   // Properties
-  user: User | null;
+  user: UserResponse | null;
   token: string | null;
   authStatus: AuthStatus;
 

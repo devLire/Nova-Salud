@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import POS from './pages/POS';
-import Productos from './pages/Productos';
-import Ingresos from './pages/Ingresos';
-import Proveedores from './pages/Proveedores';
-import Categorias from './pages/Categorias';
-import Reportes from './pages/Reportes';
+import Login from './pages/auth/Login';
+import Dashboard from './pages/dashboard/Dashboard';
+import POS from './pages/ventas/POS';
+import Productos from './pages/productos/Productos';
+import Ingresos from './pages/ingresos/Ingresos';
+import Proveedores from './pages/proveedores/Proveedores';
+import Categorias from './pages/categorias/Categorias';
+import Reportes from './pages/reportes/Reportes';
 import Layout from './components/Layout';
 import { AuthenticatedRoute, NotAuthenticatedRoute, AdminRoute } from './components/routes/ProtectedRoutes';
 
