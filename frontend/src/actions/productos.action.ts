@@ -8,9 +8,23 @@ export const getAlertasStock = async () => {
   return data.data;
 };
 
-export const getProductos = async () => {
-  const { data } = await api.get<ProductsResponse>('/productos');
-  return data.data;
+interface Options {
+  limit?: number | string;
+  page?: number | string;
+  search?: string;
+}
+
+export const getProductos = async (options: Options) => {
+  const { limit, page, search } = options;
+
+  const { data } = await api.get<ProductsResponse>('/productos', {
+    params: {
+      limit,
+      page,
+      search
+    }
+  });
+  return data;
 };
 
 export const getProductoByID = async (id: string) => {

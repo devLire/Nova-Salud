@@ -1,10 +1,11 @@
-import {useState} from 'react'
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import IngresoItem from './components/IngresoItem'
-import {getIngresos, createIngreso} from '@/actions/ingresos.action.ts'
-import {getProductos} from '@/actions/productos.action.ts'
-import {getProveedores} from '@/actions/proveedores.action.ts'
-import type {Datum} from '@/infrastructure/interfaces/responses/ingresos.response'
+import { getIngresos, createIngreso } from '@/actions/ingresos.action.ts'
+import { getProductos } from '@/actions/productos.action.ts'
+import { getProveedores } from '@/actions/proveedores.action.ts'
+import type { Datum } from '@/infrastructure/interfaces/responses/ingresos.response'
+import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 export interface IngresoForm {
   id_producto: string;
@@ -15,6 +16,7 @@ export interface IngresoForm {
 
 export default function Ingresos() {
   const queryClient = useQueryClient()
+  const {user} = useAuthStore();
 
   const [form, setForm] = useState<IngresoForm>({
     id_producto: '',
@@ -23,16 +25,21 @@ export default function Ingresos() {
     fecha_ingreso: new Date().toISOString().split('T')[0]
   })
 
-  // 3. Tipamos el historial usando la interfaz Datum de tu API
-  const {data: historial = [] as Datum[]} = useQuery({queryKey: ['ingresos'], queryFn: getIngresos})
-  const {data: productos = []} = useQuery({queryKey: ['productos'], queryFn: getProductos})
-  const {data: proveedores = []} = useQuery({queryKey: ['proveedores'], queryFn: getProveedores})
+  const { data: historial = [] as Datum[] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
+  const { data: proveedores = [] } = useQuery({ queryKey: ['proveedores'], queryFn: getProveedores })
 
-  const {mutate: addIngreso} = useMutation({
+  const { data: productosResponse } = useQuery({
+    queryKey: ['productos', 'lista-completa'],
+    queryFn: () => getProductos({ limit: 1000 })
+  })
+
+  const productos = productosResponse?.data || []
+
+  const { mutate: addIngreso } = useMutation({
     mutationFn: createIngreso,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['ingresos']})
-      queryClient.invalidateQueries({queryKey: ['productos']})
+      queryClient.invalidateQueries({ queryKey: ['ingresos'] })
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
       setForm({
         id_producto: '',
         cantidad_ingresada: '',
@@ -43,20 +50,18 @@ export default function Ingresos() {
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm(prev => ({...prev, [e.target.name]: e.target.value}))
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.id_producto || !form.cantidad_ingresada) return alert('Completa los campos requeridos')
 
-    // 4. Transformamos los strings a numbers para que TypeScript y la API sean felices
     addIngreso({
       id_producto: Number(form.id_producto),
       cantidad_ingresada: Number(form.cantidad_ingresada),
-      id_usuario: 1, // <-- OJO: Aquí debes poner el ID del usuario logueado
-      fecha_ingreso: new Date(form.fecha_ingreso) as any, // Parseamos la fecha
-      // id_proveedor: Number(form.id_proveedor) // Descomenta esto si tu API final sí pide el proveedor
+      id_usuario: user!.id_usuario,
+      fecha_ingreso: new Date(form.fecha_ingreso) as any,
     })
   }
 
@@ -70,8 +75,7 @@ export default function Ingresos() {
         <h2 className="text-base font-semibold mb-5 text-white">Nuevo ingreso</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label
-              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
             <select
               name="id_producto"
               value={form.id_producto}
@@ -88,8 +92,7 @@ export default function Ingresos() {
           </div>
 
           <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad
-              ingresada</label>
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad ingresada</label>
             <input
               name="cantidad_ingresada"
               type="number"
@@ -102,8 +105,7 @@ export default function Ingresos() {
           </div>
 
           <div>
-            <label
-              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
             <select
               name="id_proveedor"
               value={form.id_proveedor}

@@ -15,31 +15,48 @@ export default function Layout() {
   const { logout } = useAuthStore();
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside style={{ width: 220, background: '#0f4c35', padding: '24px 16px', display: 'flex', flexDirection: 'column' }}>
-        <p style={{ color: '#fff', fontWeight: 600, fontSize: 18, marginBottom: 32 }}>Nova Salud</p>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+    <div className="flex h-screen overflow-hidden bg-[#080808]">
+      <aside className="w-[260px] h-screen bg-[#0f4c35] p-6 flex flex-col shadow-2xl border-r border-white/5 shrink-0">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="h-9 w-9 rounded-xl bg-[#2ecc71] flex items-center justify-center font-black text-[#0f4c35] text-xl">
+            +
+          </div>
+          <p className="text-white font-bold text-xl tracking-tight">Nova Salud</p>
+        </div>
+
+        <nav className="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar pr-2">
           {navItems.map(item => (
-            <NavLink key={item.path} to={item.path}
-              style={({ isActive }) => ({
-                padding: '10px 14px', borderRadius: 8, fontSize: 14,
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.6)',
-                background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                textDecoration: 'none'
-              })}>
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `
+              px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+              ${isActive
+                ? 'bg-white/15 text-white shadow-lg'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+              }
+            `}
+            >
               {item.label}
             </NavLink>
           ))}
         </nav>
-        <button onClick={logout}
-          style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'rgba(255,255,255,0.7)', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 14, textAlign: 'left' }}>
-          Cerrar sesión
-        </button>
+
+        <div className="pt-6 mt-auto border-t border-white/10">
+          <button
+            onClick={logout}
+            className="w-full px-4 py-3 bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-white/70 rounded-xl text-sm font-bold transition-all cursor-pointer border border-white/5 flex items-center justify-center gap-2"
+          >
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       </aside>
 
-      <main style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
-        <Outlet />
+      <main className="flex-1 h-screen overflow-y-auto bg-[#080808] custom-scrollbar">
+        <div className="max-w-[1200px] mx-auto p-10">
+          <Outlet />
+        </div>
       </main>
     </div>
-  )
+  );
 }

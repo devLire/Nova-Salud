@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Producto } from './components/PosProductItem'
 import PosProductItem from './components/PosProductItem'
 import PosCartItem from './components/PosCartItem'
-import type {ItemCarrito} from './components/PosCartItem'
-import { getProductos } from '../../actions/productos.action'
-import { createVenta } from '../../actions/ventas.action'
+import type { ItemCarrito } from './components/PosCartItem'
+import { getProductos } from '@/actions/productos.action.ts'
+import { createVenta } from '@/actions/ventas.action.ts'
 
 export default function POS() {
   const queryClient = useQueryClient()
@@ -13,10 +13,14 @@ export default function POS() {
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [metodoPago, setMetodoPago] = useState('Efectivo')
 
-  const { data: productos = [], isLoading } = useQuery({
-    queryKey: ['productos'],
-    queryFn: getProductos,
+  const { data: productosResponse, isLoading } = useQuery({
+    queryKey: ['productos', 'pos'],
+    queryFn: () => getProductos({
+      limit: 1000
+    }),
   })
+
+  const productos = productosResponse?.data || []
 
   const { mutate: doEfectuarVenta } = useMutation({
     mutationFn: createVenta,
@@ -51,10 +55,9 @@ export default function POS() {
 
   const cobrar = () => {
     if (carrito.length === 0) return alert('El carrito está vacío')
-    
-    // Prepare the payload (assuming basic API payload for ventas)
+
     const payload: any = {
-      usuario_id: 1, // Assuming admin or from auth
+      usuario_id: 1,
       metodo_pago: metodoPago,
       total,
       detalles: carrito.map(i => ({
@@ -64,7 +67,7 @@ export default function POS() {
         subtotal: Number(i.precio_venta) * i.cantidad
       }))
     }
-    
+
     doEfectuarVenta(payload)
     alert(`Venta registrada por S/ ${total.toFixed(2)} - ${metodoPago}`)
   }
@@ -84,7 +87,7 @@ export default function POS() {
         <div className="relative">
           <input
             type="text"
-            placeholder="🔍  Buscar producto o escanear código..."
+            placeholder="Buscar producto o escanear código..."
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             className="w-full px-4 py-3.5 bg-[#1a1a1a] border border-white/10 rounded-xl text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"

@@ -1,17 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
 import MetricaCard from './components/MetricaCard'
 import AlertaRow from './components/AlertaRow'
-import { getAlertasStock, getProductos } from '../../actions/productos.action'
-import { getVentas } from '../../actions/ventas.action'
-import { getIngresos } from '../../actions/ingresos.action'
+import { getAlertasStock, getProductos } from '@/actions/productos.action.ts'
+import { getVentas } from '@/actions/ventas.action.ts'
+import { getIngresos } from '@/actions/ingresos.action.ts'
 
 export default function Dashboard() {
   const { data: alertas = [], isLoading: loadingAlertas } = useQuery({ queryKey: ['alertas'], queryFn: getAlertasStock })
   const { data: ventas = [], isLoading: loadingVentas } = useQuery({ queryKey: ['ventas'], queryFn: getVentas })
   const { data: ingresos = [], isLoading: loadingIngresos } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
-  const { data: productos = [], isLoading: loadingProductos } = useQuery({ queryKey: ['productos'], queryFn: getProductos })
+
+  const { data: productosResponse, isLoading: loadingProductos } = useQuery({
+    queryKey: ['productos-total'],
+    queryFn: () => getProductos({
+      limit: 1,
+    })
+  })
 
   const totalVentas = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
+
+  const totalProductos = productosResponse?.pagination?.total || 0;
 
   const isLoading = loadingAlertas || loadingVentas || loadingIngresos || loadingProductos
 
@@ -21,8 +29,9 @@ export default function Dashboard() {
     { label: 'Ventas hoy', valor: `S/ ${totalVentas.toFixed(2)}` },
     { label: 'Productos en alerta', valor: alertas.length.toString() },
     { label: 'Ingresos registrados', valor: ingresos.length.toString() },
-    { label: 'Total productos', valor: productos.length.toString() },
+    { label: 'Total productos', valor: totalProductos.toString() },
   ]
+
   return (
     <div className="text-gray-100">
       <h1 className="text-2xl font-semibold mb-2 text-white">Dashboard</h1>
