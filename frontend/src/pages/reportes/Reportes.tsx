@@ -1,18 +1,24 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import VentaRow from './components/VentaRow'
 import ReportMetricaCard from './components/ReportMetricaCard'
 import { getVentas } from '@/actions/ventas.action.ts'
 
 export default function Reportes() {
+  const [pagina, setPagina] = useState(1);
+  const limite = 10;
+
   const { data: dataVentas, isLoading } = useQuery({
-    queryKey: ['ventas'],
+    queryKey: ['ventas', pagina],
     queryFn: () => getVentas({
-      limit: 1000,
-      page: 1
-    })
+      limit: limite,
+      page: pagina
+    }),
+    placeholderData: (previousData) => previousData,
   })
 
   const ventas = dataVentas?.data || []
+  const pagination = dataVentas?.pagination
 
   const totalDia = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
 
@@ -55,6 +61,32 @@ export default function Reportes() {
             ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Paginación */}
+      <div className="flex items-center justify-between mt-6">
+        <span className="text-sm text-gray-400">
+          Mostrando {ventas.length} de {pagination?.total || 0} reportes
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={pagina === 1}
+            className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            Anterior
+          </button>
+          <span className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-[#2ecc71]">
+            {pagina} / {Math.ceil((pagination?.total || 0) / (pagination?.limit || limite)) || 1}
+          </span>
+          <button
+            onClick={() => setPagina(p => p + 1)}
+            disabled={pagina >= (Math.ceil((pagination?.total || 0) / (pagination?.limit || limite)) || 1)}
+            className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            Siguiente
+          </button>
         </div>
       </div>
     </div>
