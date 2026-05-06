@@ -6,10 +6,11 @@ export interface ProveedorProps {
     telefono: string;
   };
   isLast: boolean;
+  onEdit?: () => void;
   onDelete?: (id: number) => void;
 }
 
-export default function ProveedorItem({ proveedor, isLast, onDelete }: ProveedorProps) {
+export default function ProveedorItem({ proveedor, isLast, onEdit, onDelete }: ProveedorProps) {
   return (
     <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
       {/* Empresa */}
@@ -31,6 +32,7 @@ export default function ProveedorItem({ proveedor, isLast, onDelete }: Proveedor
       <td className="p-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
+            onClick={onEdit}
             className="px-3 py-1.5 border border-white/10 rounded-md bg-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-all cursor-pointer"
           >
             Editar
