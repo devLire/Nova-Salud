@@ -14,10 +14,12 @@ export class IngresosRoutes {
     // INVENTARIO puede registrar un ingreso
     router.post('/', RoleMiddleware.requireRoles(['INVENTARIO']), ingresosController.createIngreso);
 
+    // CAJERO e INVENTARIO pueden ver los ingresos
+    router.get('/', RoleMiddleware.requireRoles(['CAJERO', 'INVENTARIO']), ingresosController.getIngresos);
+
     // El resto solo ADMIN
     router.use(RoleMiddleware.requireAdmin);
 
-    router.get('/', ingresosController.getIngresos);
     router.get('/:id', ingresosController.getIngresoByID);
 
     return router;

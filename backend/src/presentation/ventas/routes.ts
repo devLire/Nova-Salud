@@ -14,10 +14,12 @@ export class VentasRoutes {
     // CAJERO puede registrar una venta
     router.post('/', RoleMiddleware.requireRoles(['CAJERO']), ventasController.createVenta);
 
+    // CAJERO e INVENTARIO pueden ver las ventas
+    router.get('/', RoleMiddleware.requireRoles(['CAJERO', 'INVENTARIO']), ventasController.getVentas);
+
     // El resto solo ADMIN
     router.use(RoleMiddleware.requireAdmin);
 
-    router.get('/', ventasController.getVentas);
     router.get('/:id', ventasController.getVentaByID);
     router.put('/:id', ventasController.updateVenta);
 

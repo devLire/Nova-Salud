@@ -13,11 +13,11 @@ export class ProductosRoutes {
 
     // CAJERO e INVENTARIO pueden ver los productos
     router.get('/', RoleMiddleware.requireRoles(['CAJERO', 'INVENTARIO']), controller.getProductos);
+    router.get('/alertas', RoleMiddleware.requireRoles(['CAJERO', 'INVENTARIO']), controller.getAlertasStock);
 
     // El resto solo ADMIN
     router.use(RoleMiddleware.requireAdmin);
 
-    router.get('/alertas', controller.getAlertasStock);
     router.get('/:id', controller.getProductoByID);
     router.post('/', controller.createProducto);
     router.put('/:id', controller.updateProducto);
