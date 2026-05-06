@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {useState} from 'react'
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import IngresoItem from './components/IngresoItem'
-import { getIngresos, createIngreso } from '@/actions/ingresos.action.ts'
-import { getProductos } from '@/actions/productos.action.ts'
-import { getProveedores } from '@/actions/proveedores.action.ts'
-import type { Datum } from '@/infrastructure/interfaces/responses/ingresos.response'
+import {getIngresos, createIngreso} from '@/actions/ingresos.action.ts'
+import {getProductos} from '@/actions/productos.action.ts'
+import {getProveedores} from '@/actions/proveedores.action.ts'
 import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 export interface IngresoForm {
@@ -25,21 +24,34 @@ export default function Ingresos() {
     fecha_ingreso: new Date().toISOString().split('T')[0]
   })
 
-  const { data: historial = [] as Datum[] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
-  const { data: proveedores = [] } = useQuery({ queryKey: ['proveedores'], queryFn: getProveedores })
+  const {data: dataHistorial} = useQuery({
+    queryKey: ['ingresos'], queryFn: () => getIngresos({
+      limit: 1000,
+      page: 1
+    })
+  })
+  const {data: dataProveedores} = useQuery({
+    queryKey: ['proveedores'], queryFn: () => getProveedores({
+      limit: 1000,
+      page: 1,
+    })
+  })
 
-  const { data: productosResponse } = useQuery({
+  const historial = dataHistorial?.data || []
+  const proveedores = dataProveedores?.data || []
+
+  const {data: productosResponse} = useQuery({
     queryKey: ['productos', 'lista-completa'],
-    queryFn: () => getProductos({ limit: 1000 })
+    queryFn: () => getProductos({limit: 1000})
   })
 
   const productos = productosResponse?.data || []
 
-  const { mutate: addIngreso } = useMutation({
+  const {mutate: addIngreso} = useMutation({
     mutationFn: createIngreso,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ingresos'] })
-      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      queryClient.invalidateQueries({queryKey: ['ingresos']})
+      queryClient.invalidateQueries({queryKey: ['productos']})
       setForm({
         id_producto: '',
         cantidad_ingresada: '',
@@ -50,7 +62,7 @@ export default function Ingresos() {
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setForm(prev => ({...prev, [e.target.name]: e.target.value}))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,7 +87,8 @@ export default function Ingresos() {
         <h2 className="text-base font-semibold mb-5 text-white">Nuevo ingreso</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
+            <label
+              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
             <select
               name="id_producto"
               value={form.id_producto}
@@ -92,7 +105,8 @@ export default function Ingresos() {
           </div>
 
           <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad ingresada</label>
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad
+              ingresada</label>
             <input
               name="cantidad_ingresada"
               type="number"
@@ -105,7 +119,8 @@ export default function Ingresos() {
           </div>
 
           <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
+            <label
+              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
             <select
               name="id_proveedor"
               value={form.id_proveedor}

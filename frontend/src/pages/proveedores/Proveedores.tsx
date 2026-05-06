@@ -8,10 +8,15 @@ export default function Proveedores() {
   const [form, setForm] = useState({ nombre_empresa: '', contacto: '', telefono: '' })
   const [mostrarForm, setMostrarForm] = useState(false)
 
-  const { data: proveedores = [], isLoading } = useQuery({
+  const { data: dataProveedores, isLoading } = useQuery({
     queryKey: ['proveedores'],
-    queryFn: getProveedores,
+    queryFn: () => getProveedores({
+      limit: 1000,
+      page: 1
+    }),
   })
+
+  const proveedores = dataProveedores?.data || []
 
   const { mutate: create } = useMutation({
     mutationFn: createProveedor,

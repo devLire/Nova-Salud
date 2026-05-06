@@ -4,9 +4,23 @@ import type {IngresoInterface} from "@/infrastructure/interfaces/models";
 
 export type CreateIngresoPayload = Omit<IngresoInterface, 'id_inventario' | 'producto' | 'usuario'>;
 
-export const getIngresos = async () => {
-  const {data} = await api.get<IngresosResponse>('/ingresos');
-  return data.data;
+interface Options {
+  limit?: number | string;
+  page?: number | string;
+  search?: string;
+}
+
+export const getIngresos = async (options: Options) => {
+  const { limit, page, search } = options;
+
+  const {data} = await api.get<IngresosResponse>('/ingresos', {
+    params: {
+      limit,
+      page,
+      search
+    }
+  });
+  return data;
 };
 
 export const getIngresoByID = async (id: string) => {

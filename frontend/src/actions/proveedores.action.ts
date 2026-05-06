@@ -4,9 +4,23 @@ import type {ProveedorInterface} from "@/infrastructure/interfaces/models";
 
 export type CreateProveedorPayload = Omit<ProveedorInterface, 'id_proveedor' | 'activo' | 'productos'>;
 
-export const getProveedores = async () => {
-  const { data } = await api.get<ProveedoresResponse>('/proveedores');
-  return data.data;
+interface Options {
+  limit?: number | string;
+  page?: number | string;
+  search?: string;
+}
+
+export const getProveedores = async (options: Options) => {
+  const { limit, page, search } = options;
+
+  const { data } = await api.get<ProveedoresResponse>('/proveedores', {
+    params: {
+      limit,
+      page,
+      search
+    }
+  });
+  return data;
 };
 
 export const getProveedorByID = async (id: string) => {

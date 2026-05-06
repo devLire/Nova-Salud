@@ -1,15 +1,83 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
 import Product from './components/Product'
-import { getProductos } from '@/actions/productos.action.ts'
+import {createProducto, deleteProducto, getProductos, updateProducto} from '@/actions/productos.action.ts'
+import ProductoModal from './components/ProductoModal'
+import type { ProductoInterface } from '@/infrastructure/interfaces/models/producto.interface'
+import {getCategorias} from "@/actions/categorias.action.ts";
+import {getProveedores} from "@/actions/proveedores.action.ts";
 
 export default function Productos() {
-  const [inputValue, setInputValue] = useState('')
+  const [inputValue, setInputValue] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [pagina, setPagina] = useState(1);
+  const limite = 10;
 
-  const [busqueda, setBusqueda] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductoInterface | null>(null);
 
-  const [pagina, setPagina] = useState(1)
-  const limite = 10
+  const queryClient = useQueryClient();
+
+  // Categorias
+  const { data: catData } = useQuery({
+    queryKey: ['categorias-select'],
+    queryFn: () => getCategorias({ limit: 100 })
+  })
+
+  // Proveedores
+  const { data: provData } = useQuery({
+    queryKey: ['proveedores-select'],
+    queryFn: () => getProveedores({ limit: 100 })
+  })
+
+  const categorias = catData?.data || []
+  const proveedores = provData?.data || []
+
+  // Crear
+  const createMutation = useMutation({
+    mutationFn: createProducto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      setIsModalOpen(false);
+      alert('Producto creado con éxito');
+    },
+    onError: (error) => {
+      console.error(error);
+      alert('Error al crear el producto');
+    },
+  });
+
+  // Editar
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateProducto({ id, data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      setIsModalOpen(false);
+      alert('Producto actualizado con éxito');
+    },
+    onError: (error) => {
+      console.error(error);
+      alert('Error al actualizar el producto');
+    }
+  });
+
+  // Delete
+  const deleteMutation = useMutation({
+    mutationFn: deleteProducto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      alert('Producto eliminado');
+    },
+    onError: () => {
+      alert('No se pudo eliminar el producto');
+    }
+  });
+
+  const handleDelete = (id: number) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      deleteMutation.mutate(id.toString());
+    }
+  };
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -35,6 +103,28 @@ export default function Productos() {
   const productos = data?.data || []
   const pagination = data?.pagination
 
+  const handleOpenCreate = () => {
+    setSelectedProduct(null)
+    setIsModalOpen(true)
+  }
+
+  const handleOpenEdit = (producto: ProductoInterface) => {
+    setSelectedProduct(producto)
+    setIsModalOpen(true)
+  }
+
+  const handleSubmit = (formData: any) => {
+    if (selectedProduct) {
+      updateMutation.mutate({
+        id: selectedProduct.id_producto.toString(),
+        data: formData
+      });
+    } else {
+      // Si no, estamos CREANDO
+      createMutation.mutate(formData);
+    }
+  }
+
   return (
     <div className="text-gray-100">
       <div className="flex items-center justify-between mb-6">
@@ -42,7 +132,7 @@ export default function Productos() {
           <h1 className="text-[22px] font-semibold mb-1 text-white">Productos</h1>
           <p className="text-[13px] text-gray-400">Catálogo de medicamentos e inventario</p>
         </div>
-        <button className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
+        <button onClick={handleOpenCreate} className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
           + Agregar producto
         </button>
       </div>
@@ -74,7 +164,7 @@ export default function Productos() {
               <thead>
               <tr className="bg-white/5 border-b border-white/10">
                 {[
-                  'Nombre', 'Código', 'Precio', 'Stock actual',
+                  'Nombre', 'Proveedor', 'Código', 'Precio', 'Stock actual',
                   'Stock mínimo', 'Categoría', 'Estado', 'Acciones'
                 ].map(h => (
                   <th
@@ -92,6 +182,8 @@ export default function Productos() {
                   key={p.id_producto}
                   producto={p}
                   isLast={i === productos.length - 1}
+                  onEdit={() => handleOpenEdit(p)}
+                  onDelete={() => handleDelete(p.id_producto)}
                 />
               ))}
               </tbody>
@@ -123,6 +215,14 @@ export default function Productos() {
           </>
         )}
       </div>
+      <ProductoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        producto={selectedProduct}
+        categorias={categorias}
+        proveedores={proveedores}
+      />
     </div>
   );
 }

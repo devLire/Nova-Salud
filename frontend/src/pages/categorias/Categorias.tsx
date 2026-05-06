@@ -10,10 +10,15 @@ export default function Categorias() {
   const [form, setForm] = useState({ nombre: '', descripcion: '' })
   const [mostrarForm, setMostrarForm] = useState(false)
 
-  const { data: categorias = [], isLoading } = useQuery({
+  const { data: dataCategorias, isLoading } = useQuery({
     queryKey: ['categorias'],
-    queryFn: getCategorias,
+    queryFn: () => getCategorias({
+      limit: 1000,
+      page: 1
+    }),
   })
+
+  const categorias = dataCategorias?.data || []
 
   const { mutate: create } = useMutation({
     mutationFn: createCategoria,

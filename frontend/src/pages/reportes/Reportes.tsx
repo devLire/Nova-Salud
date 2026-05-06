@@ -1,13 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import VentaRow from './components/VentaRow'
 import ReportMetricaCard from './components/ReportMetricaCard'
-import { getVentas } from '../../actions/ventas.action'
+import { getVentas } from '@/actions/ventas.action.ts'
 
 export default function Reportes() {
-  const { data: ventas = [], isLoading } = useQuery({
+  const { data: dataVentas, isLoading } = useQuery({
     queryKey: ['ventas'],
-    queryFn: getVentas
+    queryFn: () => getVentas({
+      limit: 1000,
+      page: 1
+    })
   })
+
+  const ventas = dataVentas?.data || []
 
   const totalDia = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
 

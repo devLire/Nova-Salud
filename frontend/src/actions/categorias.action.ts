@@ -2,9 +2,23 @@ import { api } from '../api/api';
 import type { CategoriesResponse } from '../infrastructure/interfaces/responses/categories.response';
 import type {CategoriaInterface} from "@/infrastructure/interfaces/models";
 
-export const getCategorias = async () => {
-  const { data } = await api.get<CategoriesResponse>('/categorias');
-  return data.data;
+interface Options {
+  limit?: number | string;
+  page?: number | string;
+  search?: string;
+}
+
+export const getCategorias = async (options: Options) => {
+  const { limit, page, search } = options;
+
+  const { data } = await api.get<CategoriesResponse>('/categorias', {
+    params: {
+      limit,
+      page,
+      search
+    }
+  });
+  return data;
 };
 
 export const getCategoriaByID = async (id: string) => {
