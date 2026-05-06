@@ -1,6 +1,21 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../data/posgres';
 
+// Función auxiliar para generar fechas aleatorias en el pasado
+const getRandomPastDate = (daysBack: number = 30) => {
+  const date = new Date();
+  // Restamos días aleatorios (0 para hoy, 1 para ayer, etc.)
+  date.setDate(date.getDate() - Math.floor(Math.random() * daysBack));
+  // Ponemos una hora, minuto y segundo aleatorios para más realismo
+  date.setHours(
+    Math.floor(Math.random() * 24),
+    Math.floor(Math.random() * 60),
+    Math.floor(Math.random() * 60),
+    0
+  );
+  return date;
+};
+
 export class SeedController {
   constructor() {}
 
@@ -34,9 +49,9 @@ export class SeedController {
         );
       }
 
-      console.log(
-        'Base de datos limpia. Iniciando sembrado con datos reales...'
-      );
+      console.log('Iniciando sembrado de datos...');
+
+      // --- DATOS MAESTROS ---
 
       const nombresUsuarios = [
         'Igor Pérez',
@@ -62,9 +77,9 @@ export class SeedController {
       ];
 
       const categoriasFarmacia = [
-        'Analgésicos y Antipiréticos',
+        'Analgésicos',
         'Antibióticos',
-        'Vitaminas y Suplementos',
+        'Vitaminas',
         'Cuidado Personal',
         'Primeros Auxilios',
         'Dermatología',
@@ -72,13 +87,13 @@ export class SeedController {
         'Cuidado Infantil',
         'Salud Femenina',
         'Material Médico',
-        'Antigripales y Tos',
+        'Antigripales',
         'Salud Ocular',
         'Cuidado Bucal',
         'Antialérgicos',
         'Salud Cardiovascular',
         'Relajantes Musculares',
-        'Nutrición Especializada',
+        'Nutrición',
         'Cuidado Capilar',
         'Antimicóticos',
         'Ortopedia',
@@ -89,7 +104,7 @@ export class SeedController {
         'Bayer',
         'Genfar',
         'Pfizer',
-        'Laboratorios Portugal',
+        'Lab Portugal',
         'Hersil',
         'GSK',
         'Roche',
@@ -129,22 +144,14 @@ export class SeedController {
           precio: 18.5,
         },
         { nombre: 'Apronax 550mg', desc: 'Caja x 20 tabletas', precio: 45.0 },
-        {
-          nombre: 'Vitamina C 1g',
-          desc: 'Tubo x 10 tabletas efervescentes',
-          precio: 22.0,
-        },
+        { nombre: 'Vitamina C 1g', desc: 'Tubo x 10 tabletas', precio: 22.0 },
         { nombre: 'Sal de Andrews', desc: 'Caja x 50 sobres', precio: 30.0 },
         {
           nombre: 'Alcohol Medicinal 70°',
           desc: 'Frasco x 1 Litro',
           precio: 12.0,
         },
-        {
-          nombre: 'Agua Oxigenada 10 Vol.',
-          desc: 'Frasco x 120ml',
-          precio: 3.5,
-        },
+        { nombre: 'Agua Oxigenada', desc: 'Frasco x 120ml', precio: 3.5 },
         { nombre: 'Algodón Hidrófilo', desc: 'Bolsa x 100g', precio: 4.0 },
         {
           nombre: 'Gasa Estéril',
@@ -152,11 +159,7 @@ export class SeedController {
           precio: 10.0,
         },
         { nombre: 'Esparadrapo Tela', desc: 'Rollo 5cm x 4.5m', precio: 8.5 },
-        {
-          nombre: 'Nastizol Composición',
-          desc: 'Caja x 100 tabletas',
-          precio: 85.0,
-        },
+        { nombre: 'Nastizol', desc: 'Caja x 100 tabletas', precio: 85.0 },
         { nombre: 'Gripeal', desc: 'Caja x 100 tabletas', precio: 60.0 },
         { nombre: 'Bismutol', desc: 'Frasco x 150ml', precio: 18.0 },
         { nombre: 'Omeprazol 20mg', desc: 'Caja x 30 cápsulas', precio: 14.0 },
@@ -166,120 +169,144 @@ export class SeedController {
           desc: 'Caja x 100 tabletas',
           precio: 25.0,
         },
-        {
-          nombre: 'Dolocordralan Extra Forte',
-          desc: 'Caja x 20 tabletas',
-          precio: 32.0,
-        },
-        {
-          nombre: 'Ensure Advance Vainilla',
-          desc: 'Lata x 400g',
-          precio: 65.0,
-        },
+        { nombre: 'Dolocordralan', desc: 'Caja x 20 tabletas', precio: 32.0 },
+        { nombre: 'Ensure Advance', desc: 'Lata x 400g', precio: 65.0 },
       ];
 
-      // --- INSERCIÓN DE DATOS ---
+      // --- INSERCIÓN ---
 
-      // 1. Crear 20 Usuarios
-      const usuariosData = nombresUsuarios.map((nombreCompleto, i) => {
-        // Convierte "Juan Perez" a "juan.perez@ejemplo.com"
-        const emailFormateado =
-          nombreCompleto.toLowerCase().replace(/\s+/g, '.') + '@novasalud.com';
+      // 1. Usuarios (Admin, Inventario, Cajero específicos)
+      const usuariosData = nombresUsuarios.map((nombre, i) => {
+        let email =
+          nombre.toLowerCase().replace(/\s+/g, '.') + '@novasalud.com';
+        let rol: 'ADMINISTRADOR' | 'CAJERO' | 'INVENTARIO' =
+          i % 2 === 0 ? 'CAJERO' : 'INVENTARIO';
 
-        return {
-          nombre: nombreCompleto,
-          email: i === 0 ? 'admin@novasalud.com' : emailFormateado,
-          password: '123456', // Contraseña solicitada
-          rol:
-            i === 0
-              ? 'ADMINISTRADOR'
-              : ((i % 2 === 0 ? 'CAJERO' : 'INVENTARIO') as
-                  | 'ADMINISTRADOR'
-                  | 'CAJERO'
-                  | 'INVENTARIO'),
-          activo: true,
-        };
+        if (i === 0) {
+          email = 'admin@novasalud.com';
+          rol = 'ADMINISTRADOR';
+        } else if (i === 1) {
+          email = 'inventario@novasalud.com';
+          rol = 'INVENTARIO';
+        } else if (i === 2) {
+          email = 'cajero@novasalud.com';
+          rol = 'CAJERO';
+        }
+
+        return { nombre, email, password: '123456', rol, activo: true };
       });
       await prisma.usuario.createMany({ data: usuariosData });
 
-      // 2. Crear 20 Categorías
-      const categoriasData = categoriasFarmacia.map((cat, i) => ({
-        nombre: cat,
-        descripcion: `Productos relacionados a ${cat.toLowerCase()}`,
-        activo: true,
-      }));
-      await prisma.categoria.createMany({ data: categoriasData });
+      // 2. Categorías
+      await prisma.categoria.createMany({
+        data: categoriasFarmacia.map((cat) => ({
+          nombre: cat,
+          descripcion: `Productos de ${cat}`,
+          activo: true,
+        })),
+      });
 
-      // 3. Crear 20 Proveedores
-      const proveedoresData = proveedoresLabs.map((prov, i) => ({
-        nombre_empresa: prov,
-        contacto: `Representante de ${prov}`,
-        telefono: `9${Math.floor(10000000 + Math.random() * 90000000)}`, // Genera un teléfono peruano aleatorio
-        activo: true,
-      }));
-      await prisma.proveedor.createMany({ data: proveedoresData });
+      // 3. Proveedores
+      await prisma.proveedor.createMany({
+        data: proveedoresLabs.map((prov) => ({
+          nombre_empresa: prov,
+          contacto: 'Ventas Corp',
+          telefono: `9${Math.floor(10000000 + Math.random() * 90000000)}`,
+          activo: true,
+        })),
+      });
 
-      // 4. Crear 20 Productos
-      const productosData = productosFarmacia.map((prod, i) => ({
-        id_categoria: (i % 20) + 1,
-        id_proveedor: (i % 20) + 1,
-        codigo_barras: `775${Math.floor(100000000 + Math.random() * 900000000)}`, // Código de barras formato EAN-13
-        nombre: prod.nombre,
-        descripcion: prod.desc,
-        precio_venta: prod.precio,
-        stock_actual: Math.floor(Math.random() * 80) + 20, // Stock entre 20 y 100
-        stock_minimo: 15,
-        activo: true,
-      }));
+      // 4. Productos (Con algunos en STOCK BAJO)
+      const productosData = productosFarmacia.map((prod, i) => {
+        const stockMinimo = 15;
+        // Cada 4 productos, creamos uno con stock bajo (entre 2 y 8)
+        const stockActual =
+          i % 4 === 0
+            ? Math.floor(Math.random() * 7) + 2
+            : Math.floor(Math.random() * 50) + 20;
+
+        return {
+          id_categoria: (i % 20) + 1,
+          id_proveedor: (i % 20) + 1,
+          codigo_barras: `775${Math.floor(100000000 + Math.random() * 900000000)}`,
+          nombre: prod.nombre,
+          descripcion: prod.desc,
+          precio_venta: prod.precio,
+          stock_actual: stockActual,
+          stock_minimo: stockMinimo,
+          activo: true,
+        };
+      });
       await prisma.producto.createMany({ data: productosData });
 
-      // 5. Crear 20 Ventas
-      const ventasData = Array.from({ length: 20 }).map((_, i) => ({
-        id_usuario: (i % 20) + 1,
-        total: Math.round((Math.random() * 150 + 20) * 100) / 100, // Total aleatorio entre 20 y 170
+      // 5. Ventas (Fechas realistas: fecha_hora)
+      const ventasData = Array.from({ length: 25 }).map((_, i) => ({
+        id_usuario: (i % 5) + 1,
+        total: 0, // Se actualizará lógicamente o se deja como seed base
         metodo_pago: i % 2 === 0 ? 'Efectivo' : 'Tarjeta',
+        fecha_hora: getRandomPastDate(15), // Ventas de los últimos 15 días
       }));
+      // Nota: En un seed real con Decimal, 'total' suele calcularse,
+      // aquí ponemos un valor random para que no sea 0
+      ventasData.forEach(
+        (v) => (v.total = Math.floor(Math.random() * 100) + 20)
+      );
       await prisma.venta.createMany({ data: ventasData });
 
-      // 6. Crear 20 Detalles de Venta
-      const detallesVentaData = Array.from({ length: 20 }).map((_, i) => ({
-        id_venta: (i % 20) + 1,
-        id_producto: (i % 20) + 1,
-        cantidad: Math.floor(Math.random() * 5) + 1, // Cantidad entre 1 y 5
-        precio_unitario: productosFarmacia[i].precio,
-        subtotal:
-          productosFarmacia[i].precio * (Math.floor(Math.random() * 5) + 1),
-      }));
+      // 6. Detalles de Venta
+      const detallesVentaData = Array.from({ length: 40 }).map((_, i) => {
+        const precio = productosFarmacia[i % 20].precio;
+        const cant = Math.floor(Math.random() * 3) + 1;
+        return {
+          id_venta: (i % 25) + 1,
+          id_producto: (i % 20) + 1,
+          cantidad: cant,
+          precio_unitario: precio,
+          subtotal: precio * cant,
+        };
+      });
       await prisma.detalle_Venta_Producto.createMany({
         data: detallesVentaData,
       });
 
-      // 7. Crear 20 Ingresos de Inventario
-      const ingresosData = Array.from({ length: 20 }).map((_, i) => ({
+      // 7. Ingresos de Inventario (Fechas realistas: fecha_ingreso)
+      const ingresosData = Array.from({ length: 15 }).map((_, i) => ({
         id_producto: (i % 20) + 1,
-        id_usuario: (i % 20) + 1,
-        cantidad_ingresada: Math.floor(Math.random() * 100) + 50, // Entre 50 y 150
+        id_usuario: 2, // Usuario Inventario (que configuramos en la posición 1 -> ID 2)
+        cantidad_ingresada: Math.floor(Math.random() * 50) + 10,
+        fecha_ingreso: getRandomPastDate(30), // Ingresos del último mes
       }));
       await prisma.ingreso_inventario.createMany({ data: ingresosData });
 
       console.log('Sembrado completado con éxito.');
 
+      // --- RECUPERAR USUARIOS DE PRUEBA ---
       const adminUser = await prisma.usuario.findUnique({
         where: { email: 'admin@novasalud.com' },
+      });
+      const inventarioUser = await prisma.usuario.findUnique({
+        where: { email: 'inventario@novasalud.com' },
+      });
+      const cajeroUser = await prisma.usuario.findUnique({
+        where: { email: 'cajero@novasalud.com' },
       });
 
       return res.status(201).json({
         status: 'success',
-        message: 'Base de datos limpiada y ejecutado el seed',
-        data: adminUser,
+        message: 'Base de datos limpiada y ejecutado el seed correctamente.',
+        data: {
+          testAccounts: {
+            admin: adminUser,
+            inventario: inventarioUser,
+            cajero: cajeroUser,
+          },
+        },
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Error al ejecutar el seed',
-        errors: error,
-      });
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error en el seed', errors: error });
     }
   };
 }
