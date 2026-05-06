@@ -12,7 +12,7 @@ export const getCategoriaByID = async (id: string) => {
   return data;
 };
 
-export const createCategoria = async (categoria: CategoriaInterface) => {
+export const createCategoria = async (categoria: Omit<CategoriaInterface, 'id_categoria' | 'activo' | 'productos'>) => {
   const { data } = await api.post('/categorias', categoria);
   return data;
 };

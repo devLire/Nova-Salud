@@ -4,14 +4,27 @@ import IngresoItem from './components/IngresoItem'
 import { getIngresos, createIngreso } from '@/actions/ingresos.action.ts'
 import { getProductos } from '@/actions/productos.action.ts'
 import { getProveedores } from '@/actions/proveedores.action.ts'
+import type { Datum } from '@/infrastructure/interfaces/responses/ingresos.response'
 
-export interface IngresoForm { producto_id: string; cantidad: string; proveedor_id: string; fecha: string }
+export interface IngresoForm {
+  id_producto: string;
+  cantidad_ingresada: string;
+  id_proveedor: string;
+  fecha_ingreso: string;
+}
 
 export default function Ingresos() {
   const queryClient = useQueryClient()
-  const [form, setForm] = useState<IngresoForm>({ producto_id: '', cantidad: '', proveedor_id: '', fecha: new Date().toISOString().split('T')[0] })
 
-  const { data: historial = [] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
+  const [form, setForm] = useState<IngresoForm>({
+    id_producto: '',
+    cantidad_ingresada: '',
+    id_proveedor: '',
+    fecha_ingreso: new Date().toISOString().split('T')[0]
+  })
+
+  // 3. Tipamos el historial usando la interfaz Datum de tu API
+  const { data: historial = [] as Datum[] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
   const { data: productos = [] } = useQuery({ queryKey: ['productos'], queryFn: getProductos })
   const { data: proveedores = [] } = useQuery({ queryKey: ['proveedores'], queryFn: getProveedores })
 
@@ -20,7 +33,7 @@ export default function Ingresos() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingresos'] })
       queryClient.invalidateQueries({ queryKey: ['productos'] })
-      setForm({ producto_id: '', cantidad: '', proveedor_id: '', fecha: new Date().toISOString().split('T')[0] })
+      setForm({ id_producto: '', cantidad_ingresada: '', id_proveedor: '', fecha_ingreso: new Date().toISOString().split('T')[0] })
     }
   })
 
@@ -30,8 +43,16 @@ export default function Ingresos() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.producto_id || !form.cantidad || !form.proveedor_id) return alert('Completa todos los campos')
-    addIngreso(form)
+    if (!form.id_producto || !form.cantidad_ingresada) return alert('Completa los campos requeridos')
+
+    // 4. Transformamos los strings a numbers para que TypeScript y la API sean felices
+    addIngreso({
+      id_producto: Number(form.id_producto),
+      cantidad_ingresada: Number(form.cantidad_ingresada),
+      id_usuario: 1, // <-- OJO: Aquí debes poner el ID del usuario logueado
+      fecha_ingreso: new Date(form.fecha_ingreso) as any, // Parseamos la fecha
+      // id_proveedor: Number(form.id_proveedor) // Descomenta esto si tu API final sí pide el proveedor
+    })
   }
 
   return (
@@ -45,25 +66,28 @@ export default function Ingresos() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Producto</label>
-            <select name="producto_id" value={form.producto_id} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
+            <select name="id_producto" value={form.id_producto} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
               <option value="">Selecciona un producto</option>
-              {productos?.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {Array.isArray(productos) && productos.map((p: any) => <option key={p.id_producto || p.id} value={p.id_producto || p.id}>{p.nombre}</option>)}
             </select>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Cantidad ingresada</label>
-            <input name="cantidad" type="number" min="1" value={form.cantidad} onChange={handleChange} placeholder="Ej: 100" style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+            <input name="cantidad_ingresada" type="number" min="1" value={form.cantidad_ingresada} onChange={handleChange} placeholder="Ej: 100" style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
           </div>
+
+          {/* Mantuve el proveedor visualmente, pero si el backend ya lo infiere por el producto, puedes borrar este bloque */}
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Proveedor</label>
-            <select name="proveedor_id" value={form.proveedor_id} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
+            <select name="id_proveedor" value={form.id_proveedor} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
               <option value="">Selecciona un proveedor</option>
-              {proveedores?.map((p: any) => <option key={p.id} value={p.id}>{p.nombre_empresa}</option>)}
+              {Array.isArray(proveedores) && proveedores.map((p: any) => <option key={p.id_proveedor || p.id} value={p.id_proveedor || p.id}>{p.nombre_empresa}</option>)}
             </select>
           </div>
+
           <div>
             <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Fecha</label>
-            <input name="fecha" type="date" value={form.fecha} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+            <input name="fecha_ingreso" type="date" value={form.fecha_ingreso} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
           </div>
           <button type="submit" style={{ padding: '12px', background: '#0f4c35', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             Registrar ingreso
@@ -76,16 +100,20 @@ export default function Ingresos() {
       <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
-            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-              {['Producto', 'Cantidad', 'Proveedor', 'Fecha', 'Registrado por'].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
-              ))}
-            </tr>
+          <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+            {['Producto', 'Cantidad', 'Proveedor', 'Fecha', 'Registrado por'].map(h => (
+              <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
+            ))}
+          </tr>
           </thead>
           <tbody>
-            {historial?.map((h: any, i: number) => (
-              <IngresoItem key={h.id} ingreso={h} isLast={i === historial.length - 1} />
-            ))}
+          {historial?.map((h: Datum, i: number) => (
+            <IngresoItem
+              key={h.id_inventario}
+              ingreso={h}
+              isLast={i === historial.length - 1}
+            />
+          ))}
           </tbody>
         </table>
       </div>

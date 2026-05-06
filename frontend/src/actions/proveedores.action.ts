@@ -2,6 +2,8 @@ import { api } from '../api/api';
 import type { ProveedoresResponse } from '../infrastructure/interfaces/responses/proveedores.response';
 import type {ProveedorInterface} from "@/infrastructure/interfaces/models";
 
+export type CreateProveedorPayload = Omit<ProveedorInterface, 'id_proveedor' | 'activo' | 'productos'>;
+
 export const getProveedores = async () => {
   const { data } = await api.get<ProveedoresResponse>('/proveedores');
   return data.data;
@@ -12,7 +14,7 @@ export const getProveedorByID = async (id: string) => {
   return data;
 };
 
-export const createProveedor = async (proveedor: ProveedorInterface) => {
+export const createProveedor = async (proveedor: CreateProveedorPayload) => {
   const { data } = await api.post('/proveedores', proveedor);
   return data;
 };

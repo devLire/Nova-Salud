@@ -1,4 +1,4 @@
-import type {ProductoInterface} from "@/infrastructure/interfaces/models/productos.interface.ts";
+import type {ProductoInterface} from "@/infrastructure/interfaces/models/producto.interface.ts";
 
 export interface CategoriaInterface {
   id_categoria: number,
