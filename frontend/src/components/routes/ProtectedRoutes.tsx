@@ -42,3 +42,25 @@ export const AdminRoute = ({ children }: PropsWithChildren) => {
 
   return children;
 };
+
+interface RoleRouteProps extends PropsWithChildren {
+  allowedRoles: string[];
+}
+
+export const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
+  const { authStatus, user } = useAuthStore();
+  const userRole = user?.rol || localStorage.getItem('rol');
+  
+  if (authStatus === 'checking') return null;
+
+  if (authStatus === 'not-authenticated') {
+    return <Navigate to={'/login'} />;
+  }
+
+  // Si es ADMINISTRADOR, siempre dale pase. Sino, verifica si su rol está en la lista.
+  if (userRole === 'ADMINISTRADOR' || (userRole && allowedRoles.includes(userRole))) {
+    return <>{children}</>;
+  }
+
+  return <Navigate to={'/dashboard'} />;
+};

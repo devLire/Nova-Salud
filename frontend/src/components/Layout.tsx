@@ -2,17 +2,23 @@ import { Outlet, NavLink } from 'react-router-dom'
 import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 const navItems = [
-  { path: '/dashboard',           label: 'Dashboard' },
-  { path: '/pos',                 label: 'Punto de Venta' },
-  { path: '/productos',           label: 'Productos' },
-  { path: '/inventario/ingresos', label: 'Ingresos' },
-  { path: '/proveedores',         label: 'Proveedores' },
-  { path: '/categorias',          label: 'Categorías' },
-  { path: '/reportes',            label: 'Reportes' },
+  { path: '/dashboard',           label: 'Dashboard',   roles: ['ADMINISTRADOR', 'CAJERO', 'INVENTARIO'] },
+  { path: '/pos',                 label: 'Punto de Venta', roles: ['ADMINISTRADOR', 'CAJERO'] },
+  { path: '/productos',           label: 'Productos',   roles: ['ADMINISTRADOR', 'CAJERO', 'INVENTARIO'] },
+  { path: '/inventario/ingresos', label: 'Ingresos',    roles: ['ADMINISTRADOR', 'INVENTARIO'] },
+  { path: '/proveedores',         label: 'Proveedores', roles: ['ADMINISTRADOR'] },
+  { path: '/categorias',          label: 'Categorías',  roles: ['ADMINISTRADOR'] },
+  { path: '/reportes',            label: 'Reportes',    roles: ['ADMINISTRADOR'] },
 ]
 
 export default function Layout() {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
+  const userRole = user?.rol || localStorage.getItem('rol');
+
+  const filteredNavItems = navItems.filter(item => {
+    if (!userRole) return false;
+    return item.roles.includes(userRole);
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#080808]">
@@ -25,7 +31,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar pr-2">
-          {navItems.map(item => (
+          {filteredNavItems.map(item => (
             <NavLink
               key={item.path}
               to={item.path}

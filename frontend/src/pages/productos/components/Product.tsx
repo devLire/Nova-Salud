@@ -1,4 +1,5 @@
 import type {Datum} from "@/infrastructure/interfaces/responses/products.response.ts";
+import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 export interface ProductoProps {
   producto: Datum
@@ -10,6 +11,7 @@ export interface ProductoProps {
 export default function Product({producto, isLast, onEdit, onDelete}: ProductoProps) {
   const precio = Number(producto.precio_venta).toFixed(2);
   const categoriaNombre = typeof producto.categoria === 'string' ? producto.categoria : (producto.categoria?.nombre || '');
+  const {user} = useAuthStore();
 
   return (
     <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
@@ -60,23 +62,28 @@ export default function Product({producto, isLast, onEdit, onDelete}: ProductoPr
         </div>
       </td>
 
-      <td className="p-4 text-center ">
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={onEdit}
-            className="px-3 py-1.5 border border-white/10 rounded-md bg-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-all cursor-pointer"
-          >
-            Editar
-          </button>
+      {
+        user?.rol === 'ADMINISTRADOR' && (
+          <td className="p-4 text-center ">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={onEdit}
+                className="px-3 py-1.5 border border-white/10 rounded-md bg-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+              >
+                Editar
+              </button>
 
-          <button
-            onClick={onDelete}
-            className="px-3 py-1.5 border border-red-500/20 rounded-md bg-red-500/5 text-red-500 text-xs font-medium hover:bg-red-500 hover:text-white transition-all cursor-pointer"
-          >
-            Eliminar
-          </button>
-        </div>
-      </td>
+              <button
+                onClick={onDelete}
+                className="px-3 py-1.5 border border-red-500/20 rounded-md bg-red-500/5 text-red-500 text-xs font-medium hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+              >
+                Eliminar
+              </button>
+            </div>
+          </td>
+        )
+      }
+
     </tr>
   );
 }
