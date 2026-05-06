@@ -1,14 +1,24 @@
 import { Router } from 'express';
 import { VentasController } from './controller';
+import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { RoleMiddleware } from '../../middlewares/role.middleware';
 
 export class VentasRoutes {
   static get routes(): Router {
     const router = Router();
     const ventasController = new VentasController();
 
+    // Middlewares globales
+    router.use(AuthMiddleware.validateJWT);
+
+    // CAJERO puede registrar una venta
+    router.post('/', RoleMiddleware.requireRoles(['CAJERO']), ventasController.createVenta);
+
+    // El resto solo ADMIN
+    router.use(RoleMiddleware.requireAdmin);
+
     router.get('/', ventasController.getVentas);
     router.get('/:id', ventasController.getVentaByID);
-    router.post('/', ventasController.createVenta);
     router.put('/:id', ventasController.updateVenta);
 
     return router;
