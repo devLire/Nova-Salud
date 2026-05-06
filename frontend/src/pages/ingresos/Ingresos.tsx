@@ -1,44 +1,32 @@
 import {useState} from 'react'
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import IngresoItem from './components/IngresoItem'
+import IngresoModal from './components/IngresoModal'
 import {getIngresos, createIngreso} from '@/actions/ingresos.action.ts'
 import {getProductos} from '@/actions/productos.action.ts'
-import {getProveedores} from '@/actions/proveedores.action.ts'
 import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
-
-export interface IngresoForm {
-  id_producto: string;
-  cantidad_ingresada: string;
-  id_proveedor: string;
-  fecha_ingreso: string;
-}
+import type {IngresoInterface} from '@/infrastructure/interfaces/models/ingreso.interface'
 
 export default function Ingresos() {
   const queryClient = useQueryClient()
   const {user} = useAuthStore();
 
-  const [form, setForm] = useState<IngresoForm>({
-    id_producto: '',
-    cantidad_ingresada: '',
-    id_proveedor: '',
-    fecha_ingreso: new Date().toISOString().split('T')[0]
-  })
+  const [pagina, setPagina] = useState(1);
+  const limite = 10;
 
-  const {data: dataHistorial} = useQuery({
-    queryKey: ['ingresos'], queryFn: () => getIngresos({
-      limit: 1000,
-      page: 1
-    })
-  })
-  const {data: dataProveedores} = useQuery({
-    queryKey: ['proveedores'], queryFn: () => getProveedores({
-      limit: 1000,
-      page: 1,
-    })
-  })
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIngreso, setSelectedIngreso] = useState<IngresoInterface | null>(null);
 
-  const historial = dataHistorial?.data || []
-  const proveedores = dataProveedores?.data || []
+  const {data} = useQuery({
+    queryKey: ['ingresos', pagina],
+    queryFn: () => getIngresos({
+      limit: limite,
+      page: pagina
+    }),
+    placeholderData: (previousData) => previousData,
+  })
+  const historial = data?.data || []
+  const pagination = data?.pagination
 
   const {data: productosResponse} = useQuery({
     queryKey: ['productos', 'lista-completa'],
@@ -47,117 +35,49 @@ export default function Ingresos() {
 
   const productos = productosResponse?.data || []
 
-  const {mutate: addIngreso} = useMutation({
+  // Crear
+  const createMutation = useMutation({
     mutationFn: createIngreso,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['ingresos']})
       queryClient.invalidateQueries({queryKey: ['productos']})
-      setForm({
-        id_producto: '',
-        cantidad_ingresada: '',
-        id_proveedor: '',
-        fecha_ingreso: new Date().toISOString().split('T')[0]
-      })
+      setIsModalOpen(false)
+      alert('Ingreso creado con éxito');
+    },
+    onError: (error) => {
+      console.error(error);
+      alert('Error al crear el ingreso');
     }
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm(prev => ({...prev, [e.target.name]: e.target.value}))
+  const handleOpenCreate = () => {
+    setSelectedIngreso(null)
+    setIsModalOpen(true)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.id_producto || !form.cantidad_ingresada) return alert('Completa los campos requeridos')
-
-    addIngreso({
-      id_producto: Number(form.id_producto),
-      cantidad_ingresada: Number(form.cantidad_ingresada),
+  const handleSubmit = (formData: Partial<IngresoInterface>) => {
+    const payload = {
+      ...formData,
       id_usuario: user!.id_usuario,
-      fecha_ingreso: new Date(form.fecha_ingreso) as any,
-    })
+    } as unknown as Parameters<typeof createIngreso>[0]
+
+    createMutation.mutate(payload);
   }
 
   return (
     <div className="text-gray-100">
-      <h1 className="text-[22px] font-semibold mb-1 text-white">Ingresos de Inventario</h1>
-      <p className="text-[13px] text-gray-400 mb-8">Registra la llegada de mercadería del proveedor</p>
-
-      {/* Formulario */}
-      <div className="border border-white/10 rounded-xl p-6 mb-10 max-w-[560px] mx-auto bg-[#1a1a1a] shadow-xl">
-        <h2 className="text-base font-semibold mb-5 text-white">Nuevo ingreso</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label
-              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
-            <select
-              name="id_producto"
-              value={form.id_producto}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all appearance-none"
-            >
-              <option value="" className="bg-[#1a1a1a]">Selecciona un producto</option>
-              {Array.isArray(productos) && productos.map((p: any) => (
-                <option key={p.id_producto || p.id} value={p.id_producto || p.id} className="bg-[#1a1a1a]">
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad
-              ingresada</label>
-            <input
-              name="cantidad_ingresada"
-              type="number"
-              min="1"
-              value={form.cantidad_ingresada}
-              onChange={handleChange}
-              placeholder="Ej: 100"
-              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"
-            />
-          </div>
-
-          <div>
-            <label
-              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
-            <select
-              name="id_proveedor"
-              value={form.id_proveedor}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all appearance-none"
-            >
-              <option value="" className="bg-[#1a1a1a]">Selecciona un proveedor</option>
-              {Array.isArray(proveedores) && proveedores.map((p: any) => (
-                <option key={p.id_proveedor || p.id} value={p.id_proveedor || p.id} className="bg-[#1a1a1a]">
-                  {p.nombre_empresa}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Fecha</label>
-            <input
-              name="fecha_ingreso"
-              type="date"
-              value={form.fecha_ingreso}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all [color-scheme:dark]"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="mt-2 py-3 bg-[#0f4c35] text-white border border-white/10 rounded-lg font-bold hover:bg-[#145a40] active:scale-[0.98] transition-all shadow-lg"
-          >
-            Registrar ingreso
-          </button>
-        </form>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-[22px] font-semibold mb-1 text-white">Ingresos de Inventario</h1>
+          <p className="text-[13px] text-gray-400">Registra la llegada de mercadería del proveedor</p>
+        </div>
+        <button onClick={handleOpenCreate}
+                className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
+          + Nuevo Ingreso
+        </button>
       </div>
 
       {/* Historial */}
-      <h2 className="text-base font-semibold mb-4 text-white">Historial de ingresos</h2>
       <div className="border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-md">
         <table className="w-full border-collapse text-sm">
           <thead>
@@ -173,16 +93,51 @@ export default function Ingresos() {
           </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-          {historial?.map((h: any, i: number) => (
+          {historial?.map((h: IngresoInterface, i: number) => (
             <IngresoItem
               key={h.id_inventario}
-              ingreso={h}
+              ingreso={h as unknown as import('@/infrastructure/interfaces/responses/ingresos.response').Datum}
               isLast={i === historial.length - 1}
             />
           ))}
           </tbody>
         </table>
       </div>
+
+      {/* Paginación */}
+      <div className="flex items-center justify-between mt-6">
+        <span className="text-sm text-gray-400">
+          Mostrando {historial.length} de {pagination?.total || 0} ingresos
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPagina(p => Math.max(1, p - 1))}
+            disabled={pagina === 1}
+            className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            Anterior
+          </button>
+          <span className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-[#2ecc71]">
+            {pagina} / {Math.ceil((pagination?.total || 0) / (pagination?.limit || limite)) || 1}
+          </span>
+          <button
+            onClick={() => setPagina(p => p + 1)}
+            disabled={pagina >= (Math.ceil((pagination?.total || 0) / (pagination?.limit || limite)) || 1)}
+            className="px-3 py-1 bg-[#1a1a1a] border border-white/10 rounded-md text-sm text-gray-300 disabled:opacity-50 hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+      <IngresoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        ingreso={selectedIngreso}
+        isLoading={createMutation.isPending}
+        productos={productos}
+      />
     </div>
   );
 }

@@ -14,21 +14,22 @@ export default function IngresoItem({ ingreso, isLast }: IngresoProps) {
         {ingreso.producto?.nombre || 'Desconocido'}
       </td>
 
-      <td className="p-4 text-[#2ecc71] font-bold">
+      <td className="p-4 text-[#2ecc71] font-bold text-center">
         +{ingreso.cantidad_ingresada}
       </td>
 
-      <td className="p-4 text-gray-300">
+      <td className="p-4 text-gray-300 text-center">
         {ingreso.producto?.proveedor?.nombre_empresa || 'Sin proveedor'}
       </td>
 
-      <td className="p-4 text-gray-500">
+      <td className="p-4 text-gray-500 text-center">
         {fechaFormateada}
       </td>
 
-      <td className="p-4 text-gray-500">
+      <td className="p-4 text-gray-500 text-center">
         {ingreso.usuario?.nombre || 'Desconocido'}
       </td>
+
     </tr>
   );
 }
