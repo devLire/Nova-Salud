@@ -9,7 +9,7 @@ import {
 
 export class CategoriasController {
   public getCategorias = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getCategoriasDto] = GetCategoriasDto.create(+page, +limit);
 
     if (errors)
@@ -20,9 +20,19 @@ export class CategoriasController {
       });
 
     try {
+      const whereClause: any = {
+        activo: true,
+      };
+
+      if (search) {
+        whereClause.OR = [
+          { nombre: { contains: String(search), mode: 'insensitive' } },
+        ];
+      }
+
       const [categorias, total] = await Promise.all([
         prisma.categoria.findMany({
-          where: { activo: true },
+          where: whereClause,
           skip: (getCategoriasDto!.page - 1) * getCategoriasDto!.limit,
           take: getCategoriasDto!.limit,
           select: {
@@ -31,25 +41,29 @@ export class CategoriasController {
             descripcion: true,
           },
         }),
-        prisma.categoria.count({ where: { activo: true } }),
+        prisma.categoria.count({ where: whereClause }),
       ]);
 
       const hasNext = getCategoriasDto!.page * getCategoriasDto!.limit < total;
 
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
+
       return res.json({
         status: 'success',
-        message: 'Categorías obtenidas correctamente',
+        message: 'Categoras obtenidas correctamente',
         data: categorias,
         pagination: {
           page: getCategoriasDto!.page,
           limit: getCategoriasDto!.limit,
           total,
           next: hasNext
-            ? `/api/categorias?page=${getCategoriasDto!.page + 1}&limit=${getCategoriasDto!.limit}`
+            ? `/api/categorias?page=${getCategoriasDto!.page + 1}&limit=${getCategoriasDto!.limit}${searchParam}`
             : null,
           prev:
             getCategoriasDto!.page > 1
-              ? `/api/categorias?page=${getCategoriasDto!.page - 1}&limit=${getCategoriasDto!.limit}`
+              ? `/api/categorias?page=${getCategoriasDto!.page - 1}&limit=${getCategoriasDto!.limit}${searchParam}`
               : null,
         },
       });

@@ -9,19 +9,33 @@ import {
 
 export class VentasController {
   public getVentas = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getVentasDto] = GetVentasDto.create(+page, +limit);
 
     if (errors)
       return res.status(400).json({
         status: 'fail',
-        message: 'Los datos proporcionados no son válidos.',
+        message: 'Los datos proporcionados no son vlidos.',
         errors,
       });
 
     try {
+      const whereClause: any = {};
+      if (search) {
+        whereClause.OR = [
+          { usuario: { nombre: { contains: String(search), mode: 'insensitive' } } },
+          { metodo_pago: { contains: String(search), mode: 'insensitive' } }
+        ];
+
+        // Also check if search is a number to search by id_venta
+        if (!isNaN(Number(search))) {
+          whereClause.OR.push({ id_venta: Number(search) });
+        }
+      }
+
       const [ventas, total] = await Promise.all([
         prisma.venta.findMany({
+          where: whereClause,
           skip: (getVentasDto!.page - 1) * getVentasDto!.limit,
           take: getVentasDto!.limit,
           select: {
@@ -36,10 +50,14 @@ export class VentasController {
             detalles: true,
           },
         }),
-        prisma.venta.count(),
+        prisma.venta.count({ where: whereClause }),
       ]);
 
       const hasNext = getVentasDto!.page * getVentasDto!.limit < total;
+
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
 
       return res.json({
         status: 'success',
@@ -50,11 +68,11 @@ export class VentasController {
           limit: getVentasDto!.limit,
           total,
           next: hasNext
-            ? `/api/ventas?page=${getVentasDto!.page + 1}&limit=${getVentasDto!.limit}`
+            ? `/api/ventas?page=${getVentasDto!.page + 1}&limit=${getVentasDto!.limit}${searchParam}`
             : null,
           prev:
             getVentasDto!.page > 1
-              ? `/api/ventas?page=${getVentasDto!.page - 1}&limit=${getVentasDto!.limit}`
+              ? `/api/ventas?page=${getVentasDto!.page - 1}&limit=${getVentasDto!.limit}${searchParam}`
               : null,
         },
       });

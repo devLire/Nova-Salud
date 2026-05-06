@@ -8,19 +8,28 @@ import {
 
 export class IngresosController {
   public getIngresos = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getIngresosDto] = GetIngresosDto.create(+page, +limit);
 
     if (errors)
       return res.status(400).json({
         status: 'fail',
-        message: 'Los datos proporcionados no son válidos.',
+        message: 'Los datos proporcionados no son vlidos.',
         errors,
       });
 
     try {
+      const whereClause: any = {};
+      if (search) {
+        whereClause.OR = [
+          { producto: { nombre: { contains: String(search), mode: 'insensitive' } } },
+          { usuario: { nombre: { contains: String(search), mode: 'insensitive' } } },
+        ];
+      }
+
       const [ingresos, total] = await Promise.all([
         prisma.ingreso_inventario.findMany({
+          where: whereClause,
           skip: (getIngresosDto!.page - 1) * getIngresosDto!.limit,
           take: getIngresosDto!.limit,
           select: {
@@ -44,10 +53,14 @@ export class IngresosController {
           },
           orderBy: { fecha_ingreso: 'desc' },
         }),
-        prisma.ingreso_inventario.count(),
+        prisma.ingreso_inventario.count({ where: whereClause }),
       ]);
 
       const hasNext = getIngresosDto!.page * getIngresosDto!.limit < total;
+
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
 
       return res.json({
         status: 'success',
@@ -58,11 +71,11 @@ export class IngresosController {
           limit: getIngresosDto!.limit,
           total,
           next: hasNext
-            ? `/api/ingresos?page=${getIngresosDto!.page + 1}&limit=${getIngresosDto!.limit}`
+            ? `/api/ingresos?page=${getIngresosDto!.page + 1}&limit=${getIngresosDto!.limit}${searchParam}`
             : null,
           prev:
             getIngresosDto!.page > 1
-              ? `/api/ingresos?page=${getIngresosDto!.page - 1}&limit=${getIngresosDto!.limit}`
+              ? `/api/ingresos?page=${getIngresosDto!.page - 1}&limit=${getIngresosDto!.limit}${searchParam}`
               : null,
         },
       });

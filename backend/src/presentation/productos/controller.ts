@@ -9,7 +9,7 @@ import {
 
 export class ProductosController {
   public getProductos = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getProductosDto] = GetProductosDto.create(+page, +limit);
 
     if (errors)
@@ -20,9 +20,20 @@ export class ProductosController {
       });
 
     try {
+      const whereClause: any = {
+        activo: true,
+      };
+
+      if (search) {
+        whereClause.OR = [
+          { nombre: { contains: String(search), mode: 'insensitive' } },
+          { codigo_barras: { contains: String(search) } },
+        ];
+      }
+
       const [productos, total] = await Promise.all([
         prisma.producto.findMany({
-          where: { activo: true },
+          where: whereClause,
           skip: (getProductosDto!.page - 1) * getProductosDto!.limit,
           take: getProductosDto!.limit,
           select: {
@@ -41,10 +52,14 @@ export class ProductosController {
             },
           },
         }),
-        prisma.producto.count({ where: { activo: true } }),
+        prisma.producto.count({ where: whereClause }),
       ]);
 
       const hasNext = getProductosDto!.page * getProductosDto!.limit < total;
+
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
 
       return res.json({
         status: 'success',
@@ -55,11 +70,11 @@ export class ProductosController {
           limit: getProductosDto!.limit,
           total,
           next: hasNext
-            ? `/api/productos?page=${getProductosDto!.page + 1}&limit=${getProductosDto!.limit}`
+            ? `/api/productos?page=${getProductosDto!.page + 1}&limit=${getProductosDto!.limit}${searchParam}`
             : null,
           prev:
             getProductosDto!.page > 1
-              ? `/api/productos?page=${getProductosDto!.page - 1}&limit=${getProductosDto!.limit}`
+              ? `/api/productos?page=${getProductosDto!.page - 1}&limit=${getProductosDto!.limit}${searchParam}`
               : null,
         },
       });
