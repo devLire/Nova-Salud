@@ -30,25 +30,30 @@ export default function Login() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="flex min-h-screen">
       {/* Panel izquierdo */}
-      <div style={{ flex: 1, background: '#0f4c35', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '40px 36px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: '#2ecc71', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#0f4c35', fontWeight: 900, fontSize: 18 }}>+</span>
+      <div className="flex flex-1 flex-col justify-between bg-[#0f4c35] p-10 px-9">
+        <div className="flex items-center gap-[10px]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2ecc71]">
+            <span className="text-lg font-black text-[#0f4c35]">+</span>
           </div>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>Nova Salud</span>
+          <span className="text-xl font-bold text-white">Nova Salud</span>
         </div>
+
         <div>
-          <h2 style={{ color: '#fff', fontSize: 28, marginBottom: 12 }}>Sistema de gestión farmacéutica</h2>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6 }}>
+          <h2 className="mb-3 text-[28px] text-white">Sistema de gestión farmacéutica</h2>
+          <p className="text-sm leading-relaxed text-white/55">
             Control de inventario, ventas y alertas de stock en tiempo real.
           </p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {['Alertas de stock automáticas', 'Registro de ventas por cajero', 'Panel de inventario en vivo'].map(txt => (
-            <div key={txt} style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: '8px 14px', fontSize: 12, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2ecc71', display: 'inline-block' }} />
+
+        <div className="flex flex-col gap-2">
+          {['Alertas de stock automáticas', 'Registro de ventas por cajero', 'Panel de inventario en vivo'].map((txt) => (
+            <div
+              key={txt}
+              className="flex items-center gap-2 rounded-[20px] border border-white/10 bg-white/5 py-2 px-3.5 text-[12px] text-white/70"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2ecc71] inline-block" />
               {txt}
             </div>
           ))}
@@ -56,49 +61,55 @@ export default function Login() {
       </div>
 
       {/* Panel derecho */}
-      <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 40px' }}>
-        <h1 style={{ fontSize: 26, marginBottom: 4 }}>Bienvenido</h1>
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 32 }}>Ingresa tus credenciales para continuar</p>
+      <div className="flex-[1.2] flex flex-col justify-center p-12 px-10">
+        <h1 className="mb-1 text-[26px]">Bienvenido</h1>
+        <p className="mb-8 text-[13px] text-gray-400">Ingresa tus credenciales para continuar</p>
 
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-2.5 px-3.5 text-[13px] text-red-600">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Correo electrónico</label>
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="mb-5">
+            <label className="mb-1.5 block text-[12px] font-medium uppercase tracking-[0.4px] text-gray-400">
+              Correo electrónico
+            </label>
             <input
               type="email"
               placeholder="usuario@novasalud.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 p-2.5 px-3.5 text-sm outline-none focus:ring-2 focus:ring-[#0f4c35]/20 focus:border-[#0f4c35]"
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Contraseña</label>
+          <div className="mb-5">
+            <div className="mb-1.5 flex justify-between">
+              <label className="text-[12px] font-medium uppercase tracking-[0.4px] text-gray-400">
+                Contraseña
+              </label>
             </div>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 p-2.5 px-3.5 text-sm outline-none focus:ring-2 focus:ring-[#0f4c35]/20 focus:border-[#0f4c35]"
             />
           </div>
+
           <button
             type="submit"
             disabled={isPosting}
-            style={{ width: '100%', padding: 12, background: isPosting ? '#6b7280' : '#0f4c35', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: isPosting ? 'not-allowed' : 'pointer' }}
+            className={`w-full rounded-lg py-3 text-sm font-medium text-white transition-colors 
+            ${isPosting ? 'cursor-not-allowed bg-gray-500' : 'bg-[#0f4c35] hover:bg-[#0a3626]'}`}
           >
             {isPosting ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -16,21 +16,52 @@ export default function Product({ producto, isLast }: ProductoProps) {
   const categoriaNombre = typeof producto.categoria === 'string' ? producto.categoria : (producto.categoria?.nombre || '');
 
   return (
-    <tr style={{ borderBottom: isLast ? 'none' : '1px solid #f3f4f6' }}>
-      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{producto.nombre}</td>
-      <td style={{ padding: '14px 16px', color: '#888' }}>{producto.codigo_barras}</td>
-      <td style={{ padding: '14px 16px' }}>S/ {precio}</td>
-      <td style={{ padding: '14px 16px', color: producto.stock_actual < producto.stock_minimo ? '#dc2626' : '#16a34a', fontWeight: 600 }}>{producto.stock_actual}</td>
-      <td style={{ padding: '14px 16px', color: '#888' }}>{producto.stock_minimo}</td>
-      <td style={{ padding: '14px 16px' }}>{categoriaNombre}</td>
-      <td style={{ padding: '14px 16px' }}>
-        {producto.stock_actual < producto.stock_minimo
-          ? <span style={{ background: '#fef2f2', color: '#dc2626', borderRadius: 20, padding: '4px 10px', fontSize: 12 }}>⚠ Stock bajo</span>
-          : <span style={{ background: '#f0fdf4', color: '#16a34a', borderRadius: 20, padding: '4px 10px', fontSize: 12 }}>✓ OK</span>
-        }
+    <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
+      <td className="p-4 text-center font-medium text-gray-200">
+        {producto.nombre}
       </td>
-      <td style={{ padding: '14px 16px' }}>
-        <button style={{ marginRight: 8, padding: '6px 12px', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white', fontSize: 12 }}>Editar</button>
+
+      <td className="p-4 text-center text-gray-500">
+        {producto.codigo_barras}
+      </td>
+
+      <td className="p-4 text-center text-gray-300">
+        S/ {precio}
+      </td>
+
+      <td className={`p-4 text-center font-bold ${
+        producto.stock_actual < producto.stock_minimo ? 'text-red-500' : 'text-[#2ecc71]'
+      }`}>
+        {producto.stock_actual}
+      </td>
+
+      <td className="p-4 text-center text-gray-500">
+        {producto.stock_minimo}
+      </td>
+
+      <td className="p-4 text-center text-gray-300">
+        {categoriaNombre}
+      </td>
+
+      {/* ESTADO CORREGIDO */}
+      <td className="p-4 text-center">
+        <div className="flex justify-center">
+          {producto.stock_actual < producto.stock_minimo ? (
+            <span className="whitespace-nowrap bg-red-500/10 text-red-500 border border-red-500/20 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1">
+            <span className="text-[10px]">⚠</span> STOCK BAJO
+          </span>
+          ) : (
+            <span className="whitespace-nowrap bg-[#2ecc71]/10 text-[#2ecc71] border border-[#2ecc71]/20 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider inline-flex items-center gap-1">
+            <span className="text-[10px]">✓</span> OK
+          </span>
+          )}
+        </div>
+      </td>
+
+      <td className="p-4 text-center">
+        <button className="px-3 py-1.5 border border-white/10 rounded-md bg-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-all cursor-pointer">
+          Editar
+        </button>
       </td>
     </tr>
   );

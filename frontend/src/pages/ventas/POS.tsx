@@ -48,22 +48,26 @@ export default function POS() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 24, height: 'calc(100vh - 96px)' }}>
+    <div className="flex gap-6 text-gray-100 h-[calc(100vh-96px)]">
       {/* Panel izquierdo: buscador de productos */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Punto de Venta</h1>
-          <p style={{ color: '#888', fontSize: 13 }}>Busca por nombre o código de barras</p>
+          <h1 className="text-[22px] font-semibold mb-1 text-white">Punto de Venta</h1>
+          <p className="text-[13px] text-gray-400">Busca por nombre o código de barras</p>
         </div>
-        <input
-          type="text"
-          placeholder="🔍  Buscar producto o escanear código..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          style={{ padding: '12px 16px', border: '1px solid #ddd', borderRadius: 10, fontSize: 14, width: '100%', boxSizing: 'border-box' }}
-          autoFocus
-        />
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="🔍  Buscar producto o escanear código..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            className="w-full px-4 py-3.5 bg-[#1a1a1a] border border-white/10 rounded-xl text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"
+            autoFocus
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-2">
           {productosFiltrados.map(p => (
             <PosProductItem key={p.id} producto={p} onAgregar={agregarAlCarrito} />
           ))}
@@ -71,14 +75,16 @@ export default function POS() {
       </div>
 
       {/* Panel derecho: carrito */}
-      <div style={{ width: 360, display: 'flex', flexDirection: 'column', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e5e7eb' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600 }}>Detalle de venta</h2>
+      <div className="w-[360px] flex flex-col border border-white/10 rounded-xl bg-[#121212] overflow-hidden shadow-2xl">
+        <div className="p-5 pb-4 border-b border-white/10 bg-white/5">
+          <h2 className="text-base font-semibold text-white uppercase tracking-wider text-xs">Detalle de venta</h2>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="flex-1 overflow-y-auto p-5 py-3 flex flex-col gap-2.5 custom-scrollbar">
           {carrito.length === 0 ? (
-            <p style={{ color: '#aaa', textAlign: 'center', marginTop: 40 }}>Agrega productos al carrito</p>
+            <div className="flex flex-col items-center justify-center h-full opacity-30">
+              <p className="text-sm mt-2 text-center">Agrega productos al carrito</p>
+            </div>
           ) : (
             carrito.map(item => (
               <PosCartItem
@@ -91,24 +97,30 @@ export default function POS() {
           )}
         </div>
 
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700 }}>
-            <span>Total</span>
-            <span style={{ color: '#0f4c35' }}>S/ {total.toFixed(2)}</span>
+        <div className="p-5 border-t border-white/10 bg-white/5 flex flex-col gap-3">
+          <div className="flex justify-between items-center text-xl font-bold mb-1">
+            <span className="text-gray-400">Total</span>
+            <span className="text-[#2ecc71]">S/ {total.toFixed(2)}</span>
           </div>
-          <select value={metodoPago} onChange={e => setMetodoPago(e.target.value)} style={{ padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
-            <option>Efectivo</option>
-            <option>Tarjeta</option>
-            <option>Yape / Plin</option>
+
+          <select
+            value={metodoPago}
+            onChange={e => setMetodoPago(e.target.value)}
+            className="w-full px-3 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] [color-scheme:dark]"
+          >
+            <option className="bg-[#1a1a1a]">Efectivo</option>
+            <option className="bg-[#1a1a1a]">Tarjeta</option>
+            <option className="bg-[#1a1a1a]">Yape / Plin</option>
           </select>
+
           <button
             onClick={cobrar}
-            style={{ padding: 14, background: '#0f4c35', color: 'white', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+            className="w-full py-4 bg-[#0f4c35] hover:bg-[#145a40] text-white rounded-xl text-base font-bold transition-all active:scale-[0.98] shadow-lg border border-white/5"
           >
             Cobrar S/ {total.toFixed(2)}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

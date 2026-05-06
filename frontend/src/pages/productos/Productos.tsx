@@ -21,41 +21,56 @@ export default function Productos() {
   if (isLoading) return <p>Cargando productos...</p>
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div className="text-gray-100">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Productos</h1>
-          <p style={{ color: '#888', fontSize: 13 }}>Catálogo de medicamentos e inventario</p>
+          <h1 className="text-[22px] font-semibold mb-1 text-white">Productos</h1>
+          <p className="text-[13px] text-gray-400">Catálogo de medicamentos e inventario</p>
         </div>
-        <button style={{ padding: '10px 20px', background: '#0f4c35', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500 }}>
+        <button className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
           + Agregar producto
         </button>
       </div>
 
-      <input
-        type="text"
-        placeholder="Buscar por nombre o código..."
-        value={busqueda}
-        onChange={e => setBusqueda(e.target.value)}
-        style={{ padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, width: 300, marginBottom: 20 }}
-      />
+      {/* Buscador optimizado para tema oscuro */}
+      <div className="relative mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por nombre o código..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="w-[300px] px-4 py-2.5 bg-[#1a1a1a] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"
+        />
+      </div>
 
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+      <div className="border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-xl">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-              {['Nombre', 'Código', 'Precio', 'Stock actual', 'Stock mínimo', 'Categoría', 'Estado', 'Acciones'].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtrados.map((p: any, i: number) => (
-              <Product key={p.id_producto} producto={p} isLast={i === filtrados.length - 1} />
+          <tr className="bg-white/5 border-b border-white/10">
+            {[
+              'Nombre', 'Código', 'Precio', 'Stock actual',
+              'Stock mínimo', 'Categoría', 'Estado', 'Acciones'
+            ].map(h => (
+              <th
+                key={h}
+                className="px-4 py-4 text-center font-medium text-gray-400 uppercase text-[11px] tracking-wider"
+              >
+                {h}
+              </th>
             ))}
+          </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+          {filtrados.map((p: any, i: number) => (
+            <Product
+              key={p.id_producto}
+              producto={p}
+              isLast={i === filtrados.length - 1}
+            />
+          ))}
           </tbody>
         </table>
       </div>
     </div>
-  )
+  );
 }

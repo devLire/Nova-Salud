@@ -10,12 +10,27 @@ export interface CategoriaProps {
 
 export default function CategoriaItem({ categoria, isLast, onDelete }: CategoriaProps) {
   return (
-    <tr style={{ borderBottom: isLast ? 'none' : '1px solid #f3f4f6' }}>
-      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{categoria.nombre}</td>
-      <td style={{ padding: '14px 16px', color: '#888' }}>{categoria.descripcion}</td>
-      <td style={{ padding: '14px 16px' }}>
-        <button style={{ marginRight: 8, padding: '6px 12px', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', background: 'white', fontSize: 12 }}>Editar</button>
-        <button onClick={() => onDelete && onDelete(categoria.id_categoria)} style={{ padding: '6px 12px', border: '1px solid #fecaca', borderRadius: 6, cursor: 'pointer', background: '#fef2f2', color: '#dc2626', fontSize: 12 }}>Eliminar</button>
+    <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
+      <td className="p-4 font-medium text-gray-200">
+        {categoria.nombre}
+      </td>
+      <td className="p-4 text-gray-400">
+        {categoria.descripcion}
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-1.5 border border-white/10 rounded-md bg-white/5 text-gray-300 text-xs font-medium hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => onDelete && onDelete(categoria.id_categoria)}
+            className="px-3 py-1.5 border border-red-900/30 rounded-md bg-red-950/20 text-red-400 text-xs font-medium hover:bg-red-900/40 hover:text-red-300 transition-all cursor-pointer"
+          >
+            Eliminar
+          </button>
+        </div>
       </td>
     </tr>
   );

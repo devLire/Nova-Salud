@@ -30,7 +30,7 @@ export const AdminRoute = ({ children }: PropsWithChildren) => {
   const { authStatus, user } = useAuthStore();
 
   // Extraemos si el admin según el usuario en store, o del rol guardado previamente
-  const isAdmin = user?.rol === 'Administrador' || localStorage.getItem('rol') === 'Administrador';
+  const isAdmin = user?.rol === 'ADMINISTRADOR' || localStorage.getItem('rol') === 'ADMINISTRADOR';
 
   if (authStatus === 'checking') return null;
 

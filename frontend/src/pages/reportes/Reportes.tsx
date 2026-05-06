@@ -11,32 +11,44 @@ export default function Reportes() {
   const totalDia = ventasDemo.reduce((s, v) => s + v.total, 0)
 
   return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Reportes de ventas</h1>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 32 }}>Historial de transacciones registradas</p>
+    <div className="text-gray-100">
+      <h1 className="text-[22px] font-semibold mb-1 text-white">Reportes de ventas</h1>
+      <p className="text-[13px] text-gray-400 mb-8">Historial de transacciones registradas</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+      {/* Métricas con alineación de barra corregida */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <ReportMetricaCard label="Total ventas" valor={`S/ ${totalDia.toFixed(2)}`} />
         <ReportMetricaCard label="Número de transacciones" valor={ventasDemo.length} />
-        <ReportMetricaCard label="Ticket promedio" valor={`S/ ${(totalDia / ventasDemo.length).toFixed(2)}`} />
+        <ReportMetricaCard label="Ticket promedio" valor={`S/ ${(totalDia / (ventasDemo.length || 1)).toFixed(2)}`} />
       </div>
 
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-          <thead>
-            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+      <div className="w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm min-w-[900px]">
+            <thead>
+            <tr className="bg-white/5 border-b border-white/10">
               {['#', 'Fecha y hora', 'Total', 'Método de pago', 'Cajero', 'Productos'].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
+                <th
+                  key={h}
+                  className="px-4 py-4 text-center font-medium text-gray-400 uppercase text-[11px] tracking-wider"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody className="divide-y divide-white/5">
             {ventasDemo.map((v, i) => (
-              <VentaRow key={v.id} venta={v} isLast={i === ventasDemo.length - 1} />
+              <VentaRow
+                key={v.id}
+                venta={v}
+                isLast={i === ventasDemo.length - 1}
+              />
             ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  )
+  );
 }

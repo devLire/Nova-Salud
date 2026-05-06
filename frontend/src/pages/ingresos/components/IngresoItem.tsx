@@ -9,24 +9,24 @@ export default function IngresoItem({ ingreso, isLast }: IngresoProps) {
   const fechaFormateada = new Date(ingreso.fecha_ingreso).toLocaleDateString();
 
   return (
-    <tr style={{ borderBottom: isLast ? 'none' : '1px solid #f3f4f6' }}>
-      <td style={{ padding: '14px 16px', fontWeight: 500 }}>
+    <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
+      <td className="p-4 font-medium text-gray-200">
         {ingreso.producto?.nombre || 'Desconocido'}
       </td>
 
-      <td style={{ padding: '14px 16px', color: '#16a34a', fontWeight: 600 }}>
+      <td className="p-4 text-[#2ecc71] font-bold">
         +{ingreso.cantidad_ingresada}
       </td>
 
-      <td style={{ padding: '14px 16px' }}>
+      <td className="p-4 text-gray-300">
         {ingreso.producto?.proveedor?.nombre_empresa || 'Sin proveedor'}
       </td>
 
-      <td style={{ padding: '14px 16px', color: '#888' }}>
+      <td className="p-4 text-gray-500">
         {fechaFormateada}
       </td>
 
-      <td style={{ padding: '14px 16px', color: '#888' }}>
+      <td className="p-4 text-gray-500">
         {ingreso.usuario?.nombre || 'Desconocido'}
       </td>
     </tr>

@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {useState} from 'react'
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import IngresoItem from './components/IngresoItem'
-import { getIngresos, createIngreso } from '@/actions/ingresos.action.ts'
-import { getProductos } from '@/actions/productos.action.ts'
-import { getProveedores } from '@/actions/proveedores.action.ts'
-import type { Datum } from '@/infrastructure/interfaces/responses/ingresos.response'
+import {getIngresos, createIngreso} from '@/actions/ingresos.action.ts'
+import {getProductos} from '@/actions/productos.action.ts'
+import {getProveedores} from '@/actions/proveedores.action.ts'
+import type {Datum} from '@/infrastructure/interfaces/responses/ingresos.response'
 
 export interface IngresoForm {
   id_producto: string;
@@ -24,21 +24,26 @@ export default function Ingresos() {
   })
 
   // 3. Tipamos el historial usando la interfaz Datum de tu API
-  const { data: historial = [] as Datum[] } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
-  const { data: productos = [] } = useQuery({ queryKey: ['productos'], queryFn: getProductos })
-  const { data: proveedores = [] } = useQuery({ queryKey: ['proveedores'], queryFn: getProveedores })
+  const {data: historial = [] as Datum[]} = useQuery({queryKey: ['ingresos'], queryFn: getIngresos})
+  const {data: productos = []} = useQuery({queryKey: ['productos'], queryFn: getProductos})
+  const {data: proveedores = []} = useQuery({queryKey: ['proveedores'], queryFn: getProveedores})
 
-  const { mutate: addIngreso } = useMutation({
+  const {mutate: addIngreso} = useMutation({
     mutationFn: createIngreso,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ingresos'] })
-      queryClient.invalidateQueries({ queryKey: ['productos'] })
-      setForm({ id_producto: '', cantidad_ingresada: '', id_proveedor: '', fecha_ingreso: new Date().toISOString().split('T')[0] })
+      queryClient.invalidateQueries({queryKey: ['ingresos']})
+      queryClient.invalidateQueries({queryKey: ['productos']})
+      setForm({
+        id_producto: '',
+        cantidad_ingresada: '',
+        id_proveedor: '',
+        fecha_ingreso: new Date().toISOString().split('T')[0]
+      })
     }
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setForm(prev => ({...prev, [e.target.name]: e.target.value}))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,58 +61,102 @@ export default function Ingresos() {
   }
 
   return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Ingresos de Inventario</h1>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 32 }}>Registra la llegada de mercadería del proveedor</p>
+    <div className="text-gray-100">
+      <h1 className="text-[22px] font-semibold mb-1 text-white">Ingresos de Inventario</h1>
+      <p className="text-[13px] text-gray-400 mb-8">Registra la llegada de mercadería del proveedor</p>
 
       {/* Formulario */}
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 40, maxWidth: 560 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Nuevo ingreso</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="border border-white/10 rounded-xl p-6 mb-10 max-w-[560px] mx-auto bg-[#1a1a1a] shadow-xl">
+        <h2 className="text-base font-semibold mb-5 text-white">Nuevo ingreso</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Producto</label>
-            <select name="id_producto" value={form.id_producto} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
-              <option value="">Selecciona un producto</option>
-              {Array.isArray(productos) && productos.map((p: any) => <option key={p.id_producto || p.id} value={p.id_producto || p.id}>{p.nombre}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Cantidad ingresada</label>
-            <input name="cantidad_ingresada" type="number" min="1" value={form.cantidad_ingresada} onChange={handleChange} placeholder="Ej: 100" style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
-          </div>
-
-          {/* Mantuve el proveedor visualmente, pero si el backend ya lo infiere por el producto, puedes borrar este bloque */}
-          <div>
-            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Proveedor</label>
-            <select name="id_proveedor" value={form.id_proveedor} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14 }}>
-              <option value="">Selecciona un proveedor</option>
-              {Array.isArray(proveedores) && proveedores.map((p: any) => <option key={p.id_proveedor || p.id} value={p.id_proveedor || p.id}>{p.nombre_empresa}</option>)}
+            <label
+              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Producto</label>
+            <select
+              name="id_producto"
+              value={form.id_producto}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all appearance-none"
+            >
+              <option value="" className="bg-[#1a1a1a]">Selecciona un producto</option>
+              {Array.isArray(productos) && productos.map((p: any) => (
+                <option key={p.id_producto || p.id} value={p.id_producto || p.id} className="bg-[#1a1a1a]">
+                  {p.nombre}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 6, textTransform: 'uppercase', fontWeight: 500 }}>Fecha</label>
-            <input name="fecha_ingreso" type="date" value={form.fecha_ingreso} onChange={handleChange} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Cantidad
+              ingresada</label>
+            <input
+              name="cantidad_ingresada"
+              type="number"
+              min="1"
+              value={form.cantidad_ingresada}
+              onChange={handleChange}
+              placeholder="Ej: 100"
+              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"
+            />
           </div>
-          <button type="submit" style={{ padding: '12px', background: '#0f4c35', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+
+          <div>
+            <label
+              className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Proveedor</label>
+            <select
+              name="id_proveedor"
+              value={form.id_proveedor}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all appearance-none"
+            >
+              <option value="" className="bg-[#1a1a1a]">Selecciona un proveedor</option>
+              {Array.isArray(proveedores) && proveedores.map((p: any) => (
+                <option key={p.id_proveedor || p.id} value={p.id_proveedor || p.id} className="bg-[#1a1a1a]">
+                  {p.nombre_empresa}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">Fecha</label>
+            <input
+              name="fecha_ingreso"
+              type="date"
+              value={form.fecha_ingreso}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all [color-scheme:dark]"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="mt-2 py-3 bg-[#0f4c35] text-white border border-white/10 rounded-lg font-bold hover:bg-[#145a40] active:scale-[0.98] transition-all shadow-lg"
+          >
             Registrar ingreso
           </button>
         </form>
       </div>
 
       {/* Historial */}
-      <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Historial de ingresos</h2>
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+      <h2 className="text-base font-semibold mb-4 text-white">Historial de ingresos</h2>
+      <div className="border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-md">
+        <table className="w-full border-collapse text-sm">
           <thead>
-          <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-            {['Producto', 'Cantidad', 'Proveedor', 'Fecha', 'Registrado por'].map(h => (
-              <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
+          <tr className="bg-white/5 border-b border-white/10">
+            {['Producto', 'Cantidad', 'Proveedor', 'Fecha', 'Registrado por'].map((h) => (
+              <th
+                key={h}
+                className="px-4 py-4 text-center font-medium text-gray-400 uppercase text-[11px] tracking-wider"
+              >
+                {h}
+              </th>
             ))}
           </tr>
           </thead>
-          <tbody>
-          {historial?.map((h: Datum, i: number) => (
+          <tbody className="divide-y divide-white/5">
+          {historial?.map((h: any, i: number) => (
             <IngresoItem
               key={h.id_inventario}
               ingreso={h}
@@ -118,5 +167,5 @@ export default function Ingresos() {
         </table>
       </div>
     </div>
-  )
+  );
 }

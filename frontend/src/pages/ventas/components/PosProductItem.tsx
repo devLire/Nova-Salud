@@ -14,15 +14,23 @@ export default function PosProductItem({ producto, onAgregar }: PosProductItemPr
   return (
     <div
       onClick={() => onAgregar(producto)}
-      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', border: '1px solid #e5e7eb', borderRadius: 10, cursor: 'pointer', transition: 'background 0.15s' }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+      className="flex justify-between items-center p-4 border border-white/5 rounded-xl cursor-pointer bg-[#1a1a1a] hover:bg-[#2ecc71]/10 hover:border-[#2ecc71]/30 transition-all group"
     >
       <div>
-        <p style={{ fontWeight: 500, marginBottom: 2 }}>{producto.nombre}</p>
-        <p style={{ fontSize: 12, color: '#888' }}>Código: {producto.codigo_barras}</p>
+        <p className="font-medium text-gray-200 mb-0.5 group-hover:text-white transition-colors">
+          {producto.nombre}
+        </p>
+        <p className="text-[12px] text-gray-500">
+          Código: <span className="font-mono">{producto.codigo_barras}</span>
+        </p>
       </div>
-      <span style={{ fontWeight: 600, color: '#0f4c35', fontSize: 16 }}>S/ {producto.precio_venta.toFixed(2)}</span>
+      <div className="text-right">
+      <span className="font-bold text-[#2ecc71] text-lg">
+        S/ {producto.precio_venta.toFixed(2)}
+      </span>
+        {/* Indicador visual opcional de "stock disponible" */}
+        <p className="text-[10px] text-gray-600 uppercase tracking-tighter">Disponible</p>
+      </div>
     </div>
   );
 }

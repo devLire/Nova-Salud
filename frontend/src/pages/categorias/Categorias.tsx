@@ -32,48 +32,69 @@ export default function Categorias() {
   if (isLoading) return <p>Cargando categorías...</p>
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div className="text-gray-100">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Categorías</h1>
-          <p style={{ color: '#888', fontSize: 13 }}>Clasificación de productos farmacéuticos</p>
+          <h1 className="text-[22px] font-semibold mb-1 text-white">Categorías</h1>
+          <p className="text-[13px] text-gray-400">Clasificación de productos farmacéuticos</p>
         </div>
-        <button onClick={() => setMostrarForm(!mostrarForm)} style={{ padding: '10px 20px', background: '#0f4c35', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500 }}>
+        <button
+          onClick={() => setMostrarForm(!mostrarForm)}
+          className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer"
+        >
           + Agregar categoría
         </button>
       </div>
 
       {mostrarForm && (
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 24, maxWidth: 440 }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[['nombre', 'Nombre'], ['descripcion', 'Descripción']].map(([name, label]) => (
+        <div className="border border-white/10 rounded-xl p-6 mb-6 max-w-[440px] bg-[#1a1a1a] shadow-xl">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+            {[
+              ['nombre', 'Nombre'],
+              ['descripcion', 'Descripción']
+            ].map(([name, label]) => (
               <div key={name}>
-                <label style={{ display: 'block', fontSize: 12, color: '#888', marginBottom: 5, textTransform: 'uppercase', fontWeight: 500 }}>{label}</label>
-                <input name={name} value={(form as any)[name]} onChange={e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))} style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} required />
+                <label className="block text-[11px] text-gray-500 mb-1.5 uppercase font-bold tracking-wider">
+                  {label}
+                </label>
+                <input
+                  name={name}
+                  value={(form as any)[name]}
+                  onChange={e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] transition-all"
+                  required
+                />
               </div>
             ))}
-            <button type="submit" style={{ padding: 12, background: '#0f4c35', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500 }}>Guardar</button>
+            <button
+              type="submit"
+              className="py-3 bg-[#0f4c35] text-white border border-white/10 rounded-lg font-medium hover:bg-[#145a40] transition-colors mt-1"
+            >
+              Guardar
+            </button>
           </form>
         </div>
       )}
 
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+      <div className="border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-md">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-              {['Nombre', 'Descripción', 'Acciones'].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {categorias.map((c: any, i: number) => (
-              <CategoriaItem
-                key={c.id_categoria}
-                categoria={c}
-                isLast={i === categorias.length - 1}
-              />
+          <tr className="bg-white/5 border-b border-white/10">
+            {['Nombre', 'Descripción', 'Acciones'].map(h => (
+              <th key={h} className="px-4 py-3 text-left font-medium text-gray-400 uppercase text-[11px] tracking-wider">
+                {h}
+              </th>
             ))}
+          </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+          {categorias.map((c: any, i: number) => (
+            <CategoriaItem
+              key={c.id_categoria}
+              categoria={c}
+              isLast={i === categorias.length - 1}
+            />
+          ))}
           </tbody>
         </table>
       </div>

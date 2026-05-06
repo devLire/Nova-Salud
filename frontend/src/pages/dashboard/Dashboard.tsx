@@ -17,44 +17,49 @@ const metricas = [
 
 export default function Dashboard() {
   return (
-    <div>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>Dashboard</h1>
-      <p style={{ color: '#666', marginBottom: 32 }}>Resumen del día y alertas de reposición</p>
+    <div className="text-gray-100">
+      <h1 className="text-2xl font-semibold mb-2 text-white">Dashboard</h1>
+      <p className="text-gray-400">Resumen del día y alertas de reposición</p>
 
       {/* Métricas rápidas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 mt-8">
         {metricas.map(m => (
           <MetricaCard key={m.label} label={m.label} valor={m.valor} />
         ))}
       </div>
 
       {/* Módulo de alertas */}
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ background: '#fef2f2', color: '#dc2626', borderRadius: 6, padding: '2px 10px', fontSize: 13 }}>⚠ Alertas de stock bajo</span>
-      </h2>
+      <div className="flex items-center gap-3 mb-4">
+        <h2 className="text-lg font-semibold text-white">Alertas de stock bajo</h2>
+        <span className="bg-red-900/30 text-red-400 border border-red-800/40 rounded-lg px-2.5 py-0.5 text-xs font-bold animate-pulse">
+        {alertas.length} CRÍTICAS
+      </span>
+      </div>
 
       {alertas.length === 0 ? (
-        <p style={{ color: '#888' }}>No hay productos con stock bajo.</p>
+        <div className="bg-[#121212] border border-white/5 rounded-xl p-8 text-center">
+          <p className="text-gray-500">No hay productos con stock bajo en este momento.</p>
+        </div>
       ) : (
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+        <div className="border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-xl">
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>Producto</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 500, color: '#555' }}>Stock actual</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 500, color: '#555' }}>Stock mínimo</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 500, color: '#555' }}>Proveedor</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 500, color: '#555' }}>Estado</th>
-              </tr>
+            <tr className="bg-white/5 border-b border-white/10 text-gray-400">
+              <th className="px-4 py-3 text-left font-medium uppercase text-[11px] tracking-wider">Producto</th>
+              <th className="px-4 py-3 text-center font-medium uppercase text-[11px] tracking-wider">Stock actual</th>
+              <th className="px-4 py-3 text-center font-medium uppercase text-[11px] tracking-wider">Stock mínimo</th>
+              <th className="px-4 py-3 text-left font-medium uppercase text-[11px] tracking-wider">Proveedor</th>
+              <th className="px-4 py-3 text-center font-medium uppercase text-[11px] tracking-wider">Estado</th>
+            </tr>
             </thead>
-            <tbody>
-              {alertas.map((a, i) => (
-                <AlertaRow key={a.id} alerta={a} isLast={i === alertas.length - 1} />
-              ))}
+            <tbody className="divide-y divide-white/5">
+            {alertas.map((a, i) => (
+              <AlertaRow key={a.id} alerta={a} isLast={i === alertas.length - 1} />
+            ))}
             </tbody>
           </table>
         </div>
       )}
     </div>
-  )
+  );
 }
