@@ -11,7 +11,7 @@ export class UserController {
   constructor() {}
 
   public getUsers = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getUsersDto] = GetUsersDto.create(+page, +limit);
     if (errors)
       return res.status(400).json({
@@ -20,17 +20,32 @@ export class UserController {
         errors,
       });
     try {
+      const whereClause: any = {
+        activo: true,
+      };
+
+      if (search) {
+        whereClause.OR = [
+          { nombre: { contains: String(search), mode: 'insensitive' } },
+          { email: { contains: String(search), mode: 'insensitive' } },
+        ];
+      }
+
       const [users, total] = await Promise.all([
         prisma.usuario.findMany({
-          where: { activo: true },
+          where: whereClause,
           skip: (getUsersDto!.page - 1) * getUsersDto!.limit,
           take: getUsersDto!.limit,
           select: { id_usuario: true, nombre: true, email: true, rol: true },
         }),
-        prisma.usuario.count({ where: { activo: true } }),
+        prisma.usuario.count({ where: whereClause }),
       ]);
 
       const hasNext = getUsersDto!.page * getUsersDto!.limit < total;
+
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
 
       return res.json({
         status: 'success',
@@ -41,11 +56,11 @@ export class UserController {
           limit: getUsersDto!.limit,
           total,
           next: hasNext
-            ? `/api/users?page=${getUsersDto!.page + 1}&limit=${getUsersDto!.limit}`
+            ? `/api/users?page=${getUsersDto!.page + 1}&limit=${getUsersDto!.limit}${searchParam}`
             : null,
           prev:
             getUsersDto!.page > 1
-              ? `/api/users?page=${getUsersDto!.page - 1}&limit=${getUsersDto!.limit}`
+              ? `/api/users?page=${getUsersDto!.page - 1}&limit=${getUsersDto!.limit}${searchParam}`
               : null,
         },
       });

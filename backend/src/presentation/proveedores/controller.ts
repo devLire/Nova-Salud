@@ -9,7 +9,7 @@ import {
 
 export class ProveedorController {
   public getProveedores = async (req: Request, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const [errors, getProveedoresDto] = GetProveedoresDto.create(+page, +limit);
     if (errors)
       return res.status(400).json({
@@ -19,9 +19,19 @@ export class ProveedorController {
       });
 
     try {
+      const whereClause: any = {
+        activo: true,
+      };
+
+      if (search) {
+        whereClause.OR = [
+          { nombre_empresa: { contains: String(search), mode: 'insensitive' } },
+        ];
+      }
+
       const [proveedores, total] = await Promise.all([
         prisma.proveedor.findMany({
-          where: { activo: true },
+          where: whereClause,
           skip: (getProveedoresDto!.page - 1) * getProveedoresDto!.limit,
           take: getProveedoresDto!.limit,
           select: {
@@ -31,11 +41,15 @@ export class ProveedorController {
             telefono: true,
           },
         }),
-        prisma.proveedor.count({ where: { activo: true } }),
+        prisma.proveedor.count({ where: whereClause }),
       ]);
 
       const hasNext =
         getProveedoresDto!.page * getProveedoresDto!.limit < total;
+
+      const searchParam = search
+        ? `&search=${encodeURIComponent(String(search))}`
+        : '';
 
       return res.json({
         status: 'success',
@@ -46,11 +60,11 @@ export class ProveedorController {
           limit: getProveedoresDto!.limit,
           total,
           next: hasNext
-            ? `/api/proveedores?page=${getProveedoresDto!.page + 1}&limit=${getProveedoresDto!.limit}`
+            ? `/api/proveedores?page=${getProveedoresDto!.page + 1}&limit=${getProveedoresDto!.limit}${searchParam}`
             : null,
           prev:
             getProveedoresDto!.page > 1
-              ? `/api/proveedores?page=${getProveedoresDto!.page - 1}&limit=${getProveedoresDto!.limit}`
+              ? `/api/proveedores?page=${getProveedoresDto!.page - 1}&limit=${getProveedoresDto!.limit}${searchParam}`
               : null,
         },
       });
