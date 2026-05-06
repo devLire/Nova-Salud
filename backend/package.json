@@ -8,7 +8,7 @@
     "start": "node dist/app.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "prisma:migrate:prod": "prisma migrate deploy"
   },
   "keywords": [],
