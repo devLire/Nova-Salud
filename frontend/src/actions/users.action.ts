@@ -2,9 +2,23 @@ import { api } from '../api/api';
 import type { UsersResponse } from '../infrastructure/interfaces/responses/users.response';
 import type {UserInterface} from "@/infrastructure/interfaces/models";
 
-export const getUsers = async () => {
-  const { data } = await api.get<UsersResponse>('/users');
-  return data.data;
+interface Options {
+  limit?: number | string;
+  page?: number | string;
+  search?: string;
+}
+
+export const getUsers = async (options: Options) => {
+  const { limit, page, search } = options;
+
+  const { data } = await api.get<UsersResponse>('/users', {
+    params: {
+      limit,
+      page,
+      search
+    }
+  });
+  return data;
 };
 
 export const getUserByID = async (id: string) => {

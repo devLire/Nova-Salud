@@ -1,21 +1,32 @@
-import { useQuery } from '@tanstack/react-query'
+import {useQuery} from '@tanstack/react-query'
 import MetricaCard from './components/MetricaCard'
 import AlertaRow from './components/AlertaRow'
-import { getAlertasStock, getProductos } from '@/actions/productos.action.ts'
-import { getVentas } from '@/actions/ventas.action.ts'
-import { getIngresos } from '@/actions/ingresos.action.ts'
+import {getAlertasStock, getProductos} from '@/actions/productos.action.ts'
+import {getVentas} from '@/actions/ventas.action.ts'
+import {getIngresos} from '@/actions/ingresos.action.ts'
 
 export default function Dashboard() {
-  const { data: alertas = [], isLoading: loadingAlertas } = useQuery({ queryKey: ['alertas'], queryFn: getAlertasStock })
-  const { data: ventas = [], isLoading: loadingVentas } = useQuery({ queryKey: ['ventas'], queryFn: getVentas })
-  const { data: ingresos = [], isLoading: loadingIngresos } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
+  const {data: alertas = [], isLoading: loadingAlertas} = useQuery({queryKey: ['alertas'], queryFn: getAlertasStock})
+  const {data: dataVentas, isLoading: loadingVentas} = useQuery({
+    queryKey: ['ventas'], queryFn: () => getVentas({
+      limit: 1000,
+      page: 1,
+    })
+  })
+  const {data: dataIngresos, isLoading: loadingIngresos} = useQuery({queryKey: ['ingresos'], queryFn: () => getIngresos({
+      limit: 1000,
+      page: 1,
+    })})
 
-  const { data: productosResponse, isLoading: loadingProductos } = useQuery({
+  const {data: productosResponse, isLoading: loadingProductos} = useQuery({
     queryKey: ['productos-total'],
     queryFn: () => getProductos({
       limit: 1,
     })
   })
+
+  const ventas = dataVentas?.data || []
+  const ingresos = dataIngresos?.data || []
 
   const totalVentas = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
 
@@ -26,10 +37,10 @@ export default function Dashboard() {
   if (isLoading) return <p className="text-gray-100">Cargando dashboard...</p>
 
   const metricas = [
-    { label: 'Ventas hoy', valor: `S/ ${totalVentas.toFixed(2)}` },
-    { label: 'Productos en alerta', valor: alertas.length.toString() },
-    { label: 'Ingresos registrados', valor: ingresos.length.toString() },
-    { label: 'Total productos', valor: totalProductos.toString() },
+    {label: 'Ventas hoy', valor: `S/ ${totalVentas.toFixed(2)}`},
+    {label: 'Productos en alerta', valor: alertas.length.toString()},
+    {label: 'Ingresos registrados', valor: ingresos.length.toString()},
+    {label: 'Total productos', valor: totalProductos.toString()},
   ]
 
   return (
@@ -40,14 +51,15 @@ export default function Dashboard() {
       {/* Métricas rápidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 mt-8">
         {metricas.map(m => (
-          <MetricaCard key={m.label} label={m.label} valor={m.valor} />
+          <MetricaCard key={m.label} label={m.label} valor={m.valor}/>
         ))}
       </div>
 
       {/* Módulo de alertas */}
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-lg font-semibold text-white">Alertas de stock bajo</h2>
-        <span className="bg-red-900/30 text-red-400 border border-red-800/40 rounded-lg px-2.5 py-0.5 text-xs font-bold animate-pulse">
+        <span
+          className="bg-red-900/30 text-red-400 border border-red-800/40 rounded-lg px-2.5 py-0.5 text-xs font-bold animate-pulse">
         {alertas.length} CRÍTICAS
       </span>
       </div>
@@ -70,7 +82,7 @@ export default function Dashboard() {
             </thead>
             <tbody className="divide-y divide-white/5">
             {alertas.map((a: any, i: number) => (
-              <AlertaRow key={a.id_producto} alerta={a} isLast={i === alertas.length - 1} />
+              <AlertaRow key={a.id_producto} alerta={a} isLast={i === alertas.length - 1}/>
             ))}
             </tbody>
           </table>

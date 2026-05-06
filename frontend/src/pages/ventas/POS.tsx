@@ -6,9 +6,11 @@ import PosCartItem from './components/PosCartItem'
 import type { ItemCarrito } from './components/PosCartItem'
 import { getProductos } from '@/actions/productos.action.ts'
 import { createVenta } from '@/actions/ventas.action.ts'
+import { useAuthStore } from '@/stores/auth/useAuthStore.ts'
 
 export default function POS() {
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
   const [busqueda, setBusqueda] = useState('')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [metodoPago, setMetodoPago] = useState('Efectivo')
@@ -26,7 +28,12 @@ export default function POS() {
     mutationFn: createVenta,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] })
+      queryClient.invalidateQueries({ queryKey: ['ventas'] })
       setCarrito([])
+      alert(`Venta registrada por S/ ${total.toFixed(2)} - ${metodoPago}`)
+    },
+    onError: (error: any) => {
+      alert(`Error al registrar la venta: ${error?.response?.data?.message || error.message}`)
     }
   })
 
@@ -56,20 +63,16 @@ export default function POS() {
   const cobrar = () => {
     if (carrito.length === 0) return alert('El carrito está vacío')
 
-    const payload: any = {
-      usuario_id: 1,
+    const payload = {
+      id_usuario: user!.id_usuario,
       metodo_pago: metodoPago,
-      total,
-      detalles: carrito.map(i => ({
-        producto_id: i.id_producto,
-        cantidad: i.cantidad,
-        precio_unitario: i.precio_venta,
-        subtotal: Number(i.precio_venta) * i.cantidad
+      productos: carrito.map(i => ({
+        id_producto: i.id_producto,
+        cantidad: i.cantidad
       }))
     }
 
     doEfectuarVenta(payload)
-    alert(`Venta registrada por S/ ${total.toFixed(2)} - ${metodoPago}`)
   }
 
   if (isLoading) return <div className="text-gray-100">Cargando productos...</div>
@@ -136,9 +139,8 @@ export default function POS() {
             onChange={e => setMetodoPago(e.target.value)}
             className="w-full px-3 py-2.5 bg-[#0f0f0f] border border-white/10 rounded-lg text-sm text-gray-200 outline-none focus:ring-2 focus:ring-[#2ecc71]/20 focus:border-[#2ecc71] [color-scheme:dark]"
           >
-            <option className="bg-[#1a1a1a]">Efectivo</option>
-            <option className="bg-[#1a1a1a]">Tarjeta</option>
-            <option className="bg-[#1a1a1a]">Yape / Plin</option>
+            <option value="Efectivo" className="bg-[#1a1a1a]">Efectivo</option>
+            <option value="Tarjeta" className="bg-[#1a1a1a]">Tarjeta</option>
           </select>
 
           <button
