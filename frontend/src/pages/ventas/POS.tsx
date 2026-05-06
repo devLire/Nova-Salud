@@ -1,51 +1,76 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Producto } from './components/PosProductItem'
 import PosProductItem from './components/PosProductItem'
 import PosCartItem from './components/PosCartItem'
 import type {ItemCarrito} from './components/PosCartItem'
-
-const productosDemo: Producto[] = [
-  { id: 1, nombre: 'Paracetamol 500mg', precio_venta: 0.5, codigo_barras: '001' },
-  { id: 2, nombre: 'Ibuprofeno 400mg', precio_venta: 0.8, codigo_barras: '002' },
-  { id: 3, nombre: 'Amoxicilina 500mg', precio_venta: 1.2, codigo_barras: '003' },
-  { id: 4, nombre: 'Loratadina 10mg', precio_venta: 0.6, codigo_barras: '004' },
-  { id: 5, nombre: 'Metformina 500mg', precio_venta: 0.4, codigo_barras: '005' },
-]
+import { getProductos } from '../../actions/productos.action'
+import { createVenta } from '../../actions/ventas.action'
 
 export default function POS() {
+  const queryClient = useQueryClient()
   const [busqueda, setBusqueda] = useState('')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [metodoPago, setMetodoPago] = useState('Efectivo')
 
-  const productosFiltrados = productosDemo.filter(p =>
+  const { data: productos = [], isLoading } = useQuery({
+    queryKey: ['productos'],
+    queryFn: getProductos,
+  })
+
+  const { mutate: doEfectuarVenta } = useMutation({
+    mutationFn: createVenta,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      setCarrito([])
+    }
+  })
+
+  const productosFiltrados = productos.filter((p: Producto) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     p.codigo_barras.includes(busqueda)
   )
 
   const agregarAlCarrito = (producto: Producto) => {
     setCarrito(prev => {
-      const existe = prev.find(i => i.id === producto.id)
-      if (existe) return prev.map(i => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i)
+      const existe = prev.find(i => i.id_producto === producto.id_producto)
+      if (existe) return prev.map(i => i.id_producto === producto.id_producto ? { ...i, cantidad: i.cantidad + 1 } : i)
       return [...prev, { ...producto, cantidad: 1 }]
     })
   }
 
   const cambiarCantidad = (id: number, delta: number) => {
     setCarrito(prev =>
-      prev.map(i => i.id === id ? { ...i, cantidad: Math.max(1, i.cantidad + delta) } : i)
+      prev.map(i => i.id_producto === id ? { ...i, cantidad: Math.max(1, i.cantidad + delta) } : i)
     )
   }
 
-  const eliminarItem = (id: number) => setCarrito(prev => prev.filter(i => i.id !== id))
+  const eliminarItem = (id: number) => setCarrito(prev => prev.filter(i => i.id_producto !== id))
 
-  const total = carrito.reduce((sum, i) => sum + i.precio_venta * i.cantidad, 0)
+  const total = carrito.reduce((sum, i) => sum + Number(i.precio_venta) * i.cantidad, 0)
 
   const cobrar = () => {
     if (carrito.length === 0) return alert('El carrito está vacío')
-    // Aquí irá la llamada a POST /api/ventas con el carrito y método de pago
+    
+    // Prepare the payload (assuming basic API payload for ventas)
+    const payload: any = {
+      usuario_id: 1, // Assuming admin or from auth
+      metodo_pago: metodoPago,
+      total,
+      detalles: carrito.map(i => ({
+        producto_id: i.id_producto,
+        cantidad: i.cantidad,
+        precio_unitario: i.precio_venta,
+        subtotal: Number(i.precio_venta) * i.cantidad
+      }))
+    }
+    
+    doEfectuarVenta(payload)
     alert(`Venta registrada por S/ ${total.toFixed(2)} - ${metodoPago}`)
-    setCarrito([])
   }
+
+  if (isLoading) return <div className="text-gray-100">Cargando productos...</div>
+
 
   return (
     <div className="flex gap-6 text-gray-100 h-[calc(100vh-96px)]">
@@ -68,8 +93,8 @@ export default function POS() {
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-2">
-          {productosFiltrados.map(p => (
-            <PosProductItem key={p.id} producto={p} onAgregar={agregarAlCarrito} />
+          {productosFiltrados.map((p: Producto) => (
+            <PosProductItem key={p.id_producto} producto={p} onAgregar={agregarAlCarrito} />
           ))}
         </div>
       </div>
@@ -88,7 +113,7 @@ export default function POS() {
           ) : (
             carrito.map(item => (
               <PosCartItem
-                key={item.id}
+                key={item.id_producto}
                 item={item}
                 onCambiarCantidad={cambiarCantidad}
                 onEliminar={eliminarItem}

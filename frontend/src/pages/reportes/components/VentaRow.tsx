@@ -1,31 +1,35 @@
 export interface VentaProps {
   venta: {
-    id: number;
-    fecha: string;
-    total: number;
+    id_venta: number;
+    fecha_hora: string;
+    total: number | string;
     metodo_pago: string;
-    cajero: string;
-    items: number;
+    usuario: { nombre: string } | string | any;
+    detalles?: any[];
   };
   isLast: boolean;
 }
 
 export default function VentaRow({ venta, isLast }: VentaProps) {
+  const formatTotal = Number(venta.total).toFixed(2);
+  const cajeroName = typeof venta.usuario === 'string' ? venta.usuario : venta.usuario?.nombre || 'N/A';
+  const itemsCount = venta.detalles ? venta.detalles.reduce((acc: number, item: any) => acc + item.cantidad, 0) : '-';
+
   return (
     <tr className={`${isLast ? 'border-none' : 'border-b border-white/5'} hover:bg-white/[0.02] transition-colors`}>
       {/* ID de Venta */}
       <td className="p-4 text-center text-gray-500 font-mono text-xs">
-        #{venta.id}
+        #{venta.id_venta}
       </td>
 
       {/* Fecha y Hora */}
       <td className="p-4 text-center text-gray-300">
-        {venta.fecha}
+        {new Date(venta.fecha_hora).toLocaleString()}
       </td>
 
       {/* Total */}
       <td className="p-4 text-center font-bold text-[#2ecc71]">
-        S/ {venta.total.toFixed(2)}
+        S/ {formatTotal}
       </td>
 
       {/* Método de Pago */}
@@ -37,12 +41,12 @@ export default function VentaRow({ venta, isLast }: VentaProps) {
 
       {/* Cajero */}
       <td className="p-4 text-center text-gray-300">
-        {venta.cajero}
+        {cajeroName}
       </td>
 
       {/* Cantidad de Productos */}
       <td className="p-4 text-center text-gray-500">
-        {venta.items} items
+        {itemsCount} items
       </td>
     </tr>
   );

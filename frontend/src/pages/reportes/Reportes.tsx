@@ -1,14 +1,17 @@
+import { useQuery } from '@tanstack/react-query'
 import VentaRow from './components/VentaRow'
 import ReportMetricaCard from './components/ReportMetricaCard'
-
-const ventasDemo = [
-  { id: 1, fecha: '2025-04-28 10:32', total: 12.50, metodo_pago: 'Efectivo', cajero: 'Ana López', items: 3 },
-  { id: 2, fecha: '2025-04-28 11:15', total: 5.80, metodo_pago: 'Yape / Plin', cajero: 'Ana López', items: 2 },
-  { id: 3, fecha: '2025-04-27 14:20', total: 34.00, metodo_pago: 'Tarjeta', cajero: 'Carlos Ramos', items: 7 },
-]
+import { getVentas } from '../../actions/ventas.action'
 
 export default function Reportes() {
-  const totalDia = ventasDemo.reduce((s, v) => s + v.total, 0)
+  const { data: ventas = [], isLoading } = useQuery({
+    queryKey: ['ventas'],
+    queryFn: getVentas
+  })
+
+  const totalDia = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
+
+  if (isLoading) return <p className="text-gray-100">Cargando reportes...</p>
 
   return (
     <div className="text-gray-100">
@@ -18,8 +21,8 @@ export default function Reportes() {
       {/* Métricas con alineación de barra corregida */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <ReportMetricaCard label="Total ventas" valor={`S/ ${totalDia.toFixed(2)}`} />
-        <ReportMetricaCard label="Número de transacciones" valor={ventasDemo.length} />
-        <ReportMetricaCard label="Ticket promedio" valor={`S/ ${(totalDia / (ventasDemo.length || 1)).toFixed(2)}`} />
+        <ReportMetricaCard label="Número de transacciones" valor={ventas.length.toString()} />
+        <ReportMetricaCard label="Ticket promedio" valor={`S/ ${(totalDia / (ventas.length || 1)).toFixed(2)}`} />
       </div>
 
       <div className="w-full overflow-hidden border border-white/10 rounded-xl bg-[#121212] shadow-xl">
@@ -38,11 +41,11 @@ export default function Reportes() {
             </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-            {ventasDemo.map((v, i) => (
+            {ventas.map((v: any, i: number) => (
               <VentaRow
-                key={v.id}
+                key={v.id_venta}
                 venta={v}
-                isLast={i === ventasDemo.length - 1}
+                isLast={i === ventas.length - 1}
               />
             ))}
             </tbody>

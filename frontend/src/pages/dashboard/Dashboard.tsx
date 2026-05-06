@@ -1,21 +1,28 @@
+import { useQuery } from '@tanstack/react-query'
 import MetricaCard from './components/MetricaCard'
 import AlertaRow from './components/AlertaRow'
-
-// Datos de ejemplo — reemplaza con llamadas reales a tu API
-const alertas = [
-  { id: 1, nombre: 'Paracetamol 500mg', stock_actual: 3, stock_minimo: 10, proveedor: 'Farma Perú SAC' },
-  { id: 2, nombre: 'Amoxicilina 250mg', stock_actual: 1, stock_minimo: 15, proveedor: 'MedDistrib EIRL' },
-  { id: 3, nombre: 'Ibuprofeno 400mg', stock_actual: 5, stock_minimo: 20, proveedor: 'Farma Perú SAC' },
-]
-
-const metricas = [
-  { label: 'Ventas hoy', valor: 'S/ 1,240.00' },
-  { label: 'Productos en alerta', valor: '3' },
-  { label: 'Ingresos registrados', valor: '2' },
-  { label: 'Total productos', valor: '142' },
-]
+import { getAlertasStock, getProductos } from '../../actions/productos.action'
+import { getVentas } from '../../actions/ventas.action'
+import { getIngresos } from '../../actions/ingresos.action'
 
 export default function Dashboard() {
+  const { data: alertas = [], isLoading: loadingAlertas } = useQuery({ queryKey: ['alertas'], queryFn: getAlertasStock })
+  const { data: ventas = [], isLoading: loadingVentas } = useQuery({ queryKey: ['ventas'], queryFn: getVentas })
+  const { data: ingresos = [], isLoading: loadingIngresos } = useQuery({ queryKey: ['ingresos'], queryFn: getIngresos })
+  const { data: productos = [], isLoading: loadingProductos } = useQuery({ queryKey: ['productos'], queryFn: getProductos })
+
+  const totalVentas = ventas.reduce((s: number, v: any) => s + Number(v.total), 0)
+
+  const isLoading = loadingAlertas || loadingVentas || loadingIngresos || loadingProductos
+
+  if (isLoading) return <p className="text-gray-100">Cargando dashboard...</p>
+
+  const metricas = [
+    { label: 'Ventas hoy', valor: `S/ ${totalVentas.toFixed(2)}` },
+    { label: 'Productos en alerta', valor: alertas.length.toString() },
+    { label: 'Ingresos registrados', valor: ingresos.length.toString() },
+    { label: 'Total productos', valor: productos.length.toString() },
+  ]
   return (
     <div className="text-gray-100">
       <h1 className="text-2xl font-semibold mb-2 text-white">Dashboard</h1>
@@ -53,8 +60,8 @@ export default function Dashboard() {
             </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-            {alertas.map((a, i) => (
-              <AlertaRow key={a.id} alerta={a} isLast={i === alertas.length - 1} />
+            {alertas.map((a: any, i: number) => (
+              <AlertaRow key={a.id_producto} alerta={a} isLast={i === alertas.length - 1} />
             ))}
             </tbody>
           </table>

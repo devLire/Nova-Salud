@@ -1,7 +1,7 @@
 export interface Producto {
-  id: number;
+  id_producto: number;
   nombre: string;
-  precio_venta: number;
+  precio_venta: number | string;
   codigo_barras: string;
 }
 
@@ -11,6 +11,8 @@ export interface PosProductItemProps {
 }
 
 export default function PosProductItem({ producto, onAgregar }: PosProductItemProps) {
+  const precio = Number(producto.precio_venta).toFixed(2);
+  
   return (
     <div
       onClick={() => onAgregar(producto)}
@@ -26,7 +28,7 @@ export default function PosProductItem({ producto, onAgregar }: PosProductItemPr
       </div>
       <div className="text-right">
       <span className="font-bold text-[#2ecc71] text-lg">
-        S/ {producto.precio_venta.toFixed(2)}
+        S/ {precio}
       </span>
         {/* Indicador visual opcional de "stock disponible" */}
         <p className="text-[10px] text-gray-600 uppercase tracking-tighter">Disponible</p>
