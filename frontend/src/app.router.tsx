@@ -8,7 +8,7 @@ import Proveedores from './pages/proveedores/Proveedores';
 import Categorias from './pages/categorias/Categorias';
 import Reportes from './pages/reportes/Reportes';
 import Layout from './components/Layout';
-import { AuthenticatedRoute, NotAuthenticatedRoute, AdminRoute } from './components/routes/ProtectedRoutes';
+import { AuthenticatedRoute, NotAuthenticatedRoute, AdminRoute, RoleRoute } from './components/routes/ProtectedRoutes';
 
 export const appRouter = createBrowserRouter([
   // Rutas públicas
@@ -40,23 +40,43 @@ export const appRouter = createBrowserRouter([
       },
       {
         path: 'pos',
-        element: <POS />,
+        element: (
+          <RoleRoute allowedRoles={['CAJERO']}>
+            <POS />
+          </RoleRoute>
+        ),
       },
       {
         path: 'productos',
-        element: <Productos />,
+        element: (
+          <RoleRoute allowedRoles={['CAJERO', 'INVENTARIO']}>
+            <Productos />
+          </RoleRoute>
+        ),
       },
       {
         path: 'inventario/ingresos',
-        element: <Ingresos />,
+        element: (
+          <RoleRoute allowedRoles={['INVENTARIO']}>
+            <Ingresos />
+          </RoleRoute>
+        ),
       },
       {
         path: 'proveedores',
-        element: <Proveedores />,
+        element: (
+          <AdminRoute>
+            <Proveedores />
+          </AdminRoute>
+        ),
       },
       {
         path: 'categorias',
-        element: <Categorias />,
+        element: (
+          <AdminRoute>
+            <Categorias />
+          </AdminRoute>
+        ),
       },
       {
         path: 'reportes',

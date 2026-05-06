@@ -71,10 +71,16 @@ export default function Ingresos() {
           <h1 className="text-[22px] font-semibold mb-1 text-white">Ingresos de Inventario</h1>
           <p className="text-[13px] text-gray-400">Registra la llegada de mercadería del proveedor</p>
         </div>
-        <button onClick={handleOpenCreate}
-                className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
-          + Nuevo Ingreso
-        </button>
+
+        {
+          user?.rol === 'ADMINISTRADOR' || user?.rol === 'INVENTARIO' && (
+            <button onClick={handleOpenCreate}
+                    className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
+              + Nuevo Ingreso
+            </button>
+
+          )
+        }
       </div>
 
       {/* Historial */}

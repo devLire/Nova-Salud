@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react'
+import {useState, useEffect} from 'react'
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
 import Product from './components/Product'
 import {createProducto, deleteProducto, getProductos, updateProducto} from '@/actions/productos.action.ts'
 import ProductoModal from './components/ProductoModal'
-import type { ProductoInterface } from '@/infrastructure/interfaces/models/producto.interface'
+import type {ProductoInterface} from '@/infrastructure/interfaces/models/producto.interface'
 import {getCategorias} from "@/actions/categorias.action.ts";
 import {getProveedores} from "@/actions/proveedores.action.ts";
+import {useAuthStore} from "@/stores/auth/useAuthStore.ts";
 
 export default function Productos() {
   const [inputValue, setInputValue] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const limite = 10;
+  const {user} = useAuthStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductoInterface | null>(null);
@@ -19,15 +21,15 @@ export default function Productos() {
   const queryClient = useQueryClient();
 
   // Categorias
-  const { data: catData } = useQuery({
+  const {data: catData} = useQuery({
     queryKey: ['categorias-select'],
-    queryFn: () => getCategorias({ limit: 100 })
+    queryFn: () => getCategorias({limit: 100})
   })
 
   // Proveedores
-  const { data: provData } = useQuery({
+  const {data: provData} = useQuery({
     queryKey: ['proveedores-select'],
-    queryFn: () => getProveedores({ limit: 100 })
+    queryFn: () => getProveedores({limit: 100})
   })
 
   const categorias = catData?.data || []
@@ -37,7 +39,7 @@ export default function Productos() {
   const createMutation = useMutation({
     mutationFn: createProducto,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      queryClient.invalidateQueries({queryKey: ['productos']});
       setIsModalOpen(false);
       alert('Producto creado con éxito');
     },
@@ -49,9 +51,9 @@ export default function Productos() {
 
   // Editar
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateProducto({ id, data }),
+    mutationFn: ({id, data}: { id: string; data: any }) => updateProducto({id, data}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      queryClient.invalidateQueries({queryKey: ['productos']});
       setIsModalOpen(false);
       alert('Producto actualizado con éxito');
     },
@@ -65,7 +67,7 @@ export default function Productos() {
   const deleteMutation = useMutation({
     mutationFn: deleteProducto,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      queryClient.invalidateQueries({queryKey: ['productos']});
       alert('Producto eliminado');
     },
     onError: () => {
@@ -90,7 +92,7 @@ export default function Productos() {
     }
   }, [inputValue])
 
-  const { data, isLoading, isFetching } = useQuery({
+  const {data, isLoading, isFetching} = useQuery({
     queryKey: ['productos', pagina, busqueda],
     queryFn: () => getProductos({
       limit: limite,
@@ -132,9 +134,14 @@ export default function Productos() {
           <h1 className="text-[22px] font-semibold mb-1 text-white">Productos</h1>
           <p className="text-[13px] text-gray-400">Catálogo de medicamentos e inventario</p>
         </div>
-        <button onClick={handleOpenCreate} className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
-          + Agregar producto
-        </button>
+        {
+          user?.rol === 'ADMINISTRADOR' && (
+            <button onClick={handleOpenCreate}
+                    className="px-5 py-2.5 bg-[#2ecc71] hover:bg-[#27ae60] text-[#0f4c35] rounded-lg font-bold transition-colors cursor-pointer">
+              + Agregar producto
+            </button>
+          )
+        }
       </div>
 
       <div className="relative mb-6">
@@ -152,7 +159,8 @@ export default function Productos() {
         )}
       </div>
 
-      <div className={`border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-xl transition-opacity duration-200 ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
+      <div
+        className={`border border-white/10 rounded-xl overflow-hidden bg-[#121212] shadow-xl transition-opacity duration-200 ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
 
         {isLoading && productos.length === 0 ? (
           <div className="p-8 text-center text-gray-400">Cargando catálogo...</div>
@@ -192,7 +200,8 @@ export default function Productos() {
             {/* CONTROLES DE PAGINACIÓN */}
             <div className="flex items-center justify-between px-6 py-4 bg-white/5 border-t border-white/10">
               <span className="text-xs text-gray-400">
-                Mostrando página <span className="text-white font-medium">{pagination?.page || 1}</span> de <span className="text-white font-medium">{Math.ceil((pagination?.total || 0) / limite) || 1}</span>
+                Mostrando página <span className="text-white font-medium">{pagination?.page || 1}</span> de <span
+                className="text-white font-medium">{Math.ceil((pagination?.total || 0) / limite) || 1}</span>
               </span>
 
               <div className="flex gap-2">
