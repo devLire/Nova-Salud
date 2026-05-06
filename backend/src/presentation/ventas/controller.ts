@@ -23,8 +23,12 @@ export class VentasController {
       const whereClause: any = {};
       if (search) {
         whereClause.OR = [
-          { usuario: { nombre: { contains: String(search), mode: 'insensitive' } } },
-          { metodo_pago: { contains: String(search), mode: 'insensitive' } }
+          {
+            usuario: {
+              nombre: { contains: String(search), mode: 'insensitive' },
+            },
+          },
+          { metodo_pago: { contains: String(search), mode: 'insensitive' } },
         ];
 
         // Also check if search is a number to search by id_venta
@@ -38,6 +42,7 @@ export class VentasController {
           where: whereClause,
           skip: (getVentasDto!.page - 1) * getVentasDto!.limit,
           take: getVentasDto!.limit,
+          orderBy: { fecha_hora: 'desc' },
           select: {
             id_venta: true,
             id_usuario: true,
@@ -155,7 +160,9 @@ export class VentasController {
           });
 
           if (!usuarioExists) {
-            throw new Error('El usuario seleccionado no es válido o no existe.');
+            throw new Error(
+              'El usuario seleccionado no es válido o no existe.'
+            );
           }
         }
 
@@ -164,15 +171,19 @@ export class VentasController {
 
         for (const item of createVentaDto!.productos) {
           const productoDB = await tx.producto.findUnique({
-            where: { id_producto: item.id_producto }
+            where: { id_producto: item.id_producto },
           });
 
           if (!productoDB || !productoDB.activo) {
-            throw new Error(`Producto con ID ${item.id_producto} no encontrado o inactivo.`);
+            throw new Error(
+              `Producto con ID ${item.id_producto} no encontrado o inactivo.`
+            );
           }
 
           if (productoDB.stock_actual < item.cantidad) {
-            throw new Error(`Stock insuficiente para el producto: ${productoDB.nombre}. Stock disponible: ${productoDB.stock_actual}`);
+            throw new Error(
+              `Stock insuficiente para el producto: ${productoDB.nombre}. Stock disponible: ${productoDB.stock_actual}`
+            );
           }
 
           const subtotal = Number(productoDB.precio_venta) * item.cantidad;
@@ -187,7 +198,7 @@ export class VentasController {
 
           await tx.producto.update({
             where: { id_producto: item.id_producto },
-            data: { stock_actual: { decrement: item.cantidad } }
+            data: { stock_actual: { decrement: item.cantidad } },
           });
         }
 
@@ -197,8 +208,8 @@ export class VentasController {
             id_usuario: createVentaDto!.id_usuario,
             metodo_pago: createVentaDto!.metodo_pago,
             detalles: {
-              create: detallesParaGuardar
-            }
+              create: detallesParaGuardar,
+            },
           },
           select: {
             id_venta: true,
@@ -207,7 +218,7 @@ export class VentasController {
             total: true,
             metodo_pago: true,
             usuario: {
-              select: { id_usuario: true, nombre: true }
+              select: { id_usuario: true, nombre: true },
             },
             detalles: {
               select: {
@@ -217,9 +228,9 @@ export class VentasController {
                 precio_unitario: true,
                 subtotal: true,
                 producto: {
-                  select: { nombre: true }
-                }
-              }
+                  select: { nombre: true },
+                },
+              },
             },
           },
         });
